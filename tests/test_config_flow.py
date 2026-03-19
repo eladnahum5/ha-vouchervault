@@ -2,21 +2,21 @@
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
+import pytest # type: ignore
 
 from custom_components.vouchervault.config_flow import CannotConnect, InvalidAuth
 from custom_components.vouchervault.const import DOMAIN
 
-from homeassistant import config_entries
-from homeassistant.const import (
+from homeassistant import config_entries # type: ignore
+from homeassistant.const import ( # type: ignore
     CONF_API_TOKEN,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.core import HomeAssistant # type: ignore
+from homeassistant.data_entry_flow import FlowResultType # type: ignore
 
 
 pytestmark = pytest.mark.usefixtures("enable_custom_integrations")
