@@ -6,11 +6,14 @@
   ],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://www.home-assistant.io/integrations/vouchervault",
+  "documentation": "https://github.com/eladnahum5/ha-vouchervault",
   "homekit": {},
   "iot_class": "local_polling",
   "quality_scale": "bronze",
   "requirements": [],
   "ssdp": [],
-  "zeroconf": []
+  "zeroconf": [],
+  "integration_type": "service",
+  "version": "0.1.0",
+  "single_config_entry": true
 }

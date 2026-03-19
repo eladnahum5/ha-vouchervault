@@ -1,0 +1,5 @@
+.venv/
+.pytest_cache/
+.vscode/
+custom_components/vouchervault/__pycache__
+tests/__pycache__
