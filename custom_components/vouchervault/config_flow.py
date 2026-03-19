@@ -18,7 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import VoucherVaultApiClient
 from .const import DOMAIN
@@ -27,11 +26,14 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        # TODO: defaults for debugging, MUST be removed in production
+        vol.Required(CONF_HOST, default="192.168.0.122"): str,
         vol.Required(CONF_PORT, default=8000): int,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_API_TOKEN): str,
+        vol.Required(CONF_USERNAME, default="admin"): str,
+        vol.Required(CONF_PASSWORD, default=r"guTap%8910Fb3&"): str,
+        vol.Required(
+            CONF_API_TOKEN, default="c923cc92-0173-4663-a277-58b87f4860a3"
+        ): str,
     }
 )
 
@@ -47,16 +49,32 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         username=data[CONF_USERNAME],
         password=data[CONF_PASSWORD],
         api_token=data[CONF_API_TOKEN],
-        session=async_get_clientsession(hass),
     )
-
+    _LOGGER.info(
+        "Attempting to authenticate with VoucherVault API at %s:%s",
+        data[CONF_HOST],
+        data[CONF_PORT],
+    )
     try:
-        authenticated = await client.authenticate_token()
+        authenticated_token = await client.authenticate_token()
     except aiohttp.ClientError as err:
         raise CannotConnect from err
 
-    if not authenticated:
+    try:
+        authenticated_basic = await client.authenticate_basic()
+    except aiohttp.ClientError as err:
+        raise CannotConnect from err
+
+    if not authenticated_token or not authenticated_basic:
+        _LOGGER.error("Failed to authenticate with provided credentials")
+        _LOGGER.debug(
+            "Token authenticated: %s, Basic authenticated: %s",
+            authenticated_token,
+            authenticated_basic,
+        )
         raise InvalidAuth
+
+    _LOGGER.info("Authentication successful with provided credentials")
 
     return {"title": f"{data[CONF_HOST]}:{data[CONF_PORT]}"}
 
