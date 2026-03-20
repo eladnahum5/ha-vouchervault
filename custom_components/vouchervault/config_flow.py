@@ -56,21 +56,15 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         data[CONF_PORT],
     )
     try:
-        authenticated_token = await client.authenticate_token()
+        authenticated = await client.test_connection()
     except aiohttp.ClientError as err:
         raise CannotConnect from err
 
-    try:
-        authenticated_basic = await client.authenticate_basic()
-    except aiohttp.ClientError as err:
-        raise CannotConnect from err
-
-    if not authenticated_token or not authenticated_basic:
+    if not authenticated:
         _LOGGER.error("Failed to authenticate with provided credentials")
         _LOGGER.debug(
-            "Token authenticated: %s, Basic authenticated: %s",
-            authenticated_token,
-            authenticated_basic,
+            "Authentication result: %s",
+            authenticated,
         )
         raise InvalidAuth
 
