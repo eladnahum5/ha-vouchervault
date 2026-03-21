@@ -1,0 +1,13 @@
+toggle_item_status:
+  name: Toggle Item Status
+  description: >
+    Toggles the used/available status of a VoucherVault item
+    (e.g. redeem or un-redeem a voucher, gift card, or coupon).
+  fields:
+    item_id:
+      name: Item ID
+      description: The ID of the item to toggle.
+      required: true
+      example: "123e4567-e89b-12d3-a456-426614174000"
+      selector:
+        text:

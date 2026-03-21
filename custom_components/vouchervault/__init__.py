@@ -38,7 +38,6 @@ async def async_setup_entry(
             _LOGGER.error("No item_id provided in service call")
             return
         await coordinator.client.toggle_item_status(item_id)
-        await coordinator.async_refresh()
 
     hass.services.async_register(
         DOMAIN, "toggle_item_status", handle_toggle_item_status
