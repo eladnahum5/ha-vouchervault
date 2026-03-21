@@ -47,4 +47,5 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: VoucherVaultConfigEntry
 ) -> bool:
     """Unload a config entry."""
+    hass.services.async_remove(DOMAIN, "toggle_item_status")
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)

@@ -4,3 +4,4 @@
 custom_components/vouchervault/__pycache__
 tests/__pycache__
 .claude/
+CLAUDE.md
