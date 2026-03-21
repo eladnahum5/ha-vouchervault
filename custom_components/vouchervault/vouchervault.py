@@ -142,9 +142,35 @@ class VoucherVaultApiClient:
 
         return session
 
+    async def send_post_with_session(
+        self, request_type: str, endpoint: str, data=None
+    ) -> dict | None:
+        """Helper method to perform authenticated POST requests using a session cookie."""
+        session = await self.login_and_get_session()
+        if session is None:
+            _LOGGER.error(
+                "Cannot perform basic authenticated request without valid session"
+            )
+            return {"success": False}
+        url = f"{self.url}{endpoint}"
+        data["csrfmiddlewaretoken"] = (
+            session.cookie_jar.filter_cookies(url).get("csrftoken").value
+        )
+        async with session.post(url, data=data, allow_redirects=False) as resp:
+            if resp.status != 302:
+                _LOGGER.error(
+                    "Authenticated API request failed, expected redirect but got status %s",
+                    resp.status,
+                )
+                await session.close()
+                return {"success": False}
+            _LOGGER.debug("Authenticated API request successful with session cookie")
+            await session.close()
+            return {"success": True}
+
     async def send_api_request(
         self, request_type: str, endpoint: str, data=None
-    ) -> dict | list | None:
+    ) -> dict | None:
         """Helper method to perform requests to the API.
 
         Request type can be GET, POST, PATCH, DELETE.
@@ -155,9 +181,9 @@ class VoucherVaultApiClient:
             "Authorization": f"Bearer {self.api_token}",
         }
 
-        session = aiohttp.ClientSession()
+        http_session = aiohttp.ClientSession()
         try:
-            async with session.request(
+            async with http_session.request(
                 request_type, url, headers=headers, json=data
             ) as response:
                 if response.status in (200, 201):
@@ -177,7 +203,7 @@ class VoucherVaultApiClient:
             _LOGGER.error("API request error: %s", e)
             return None
         finally:
-            await session.close()
+            await http_session.close()
 
     async def get_stats(
         self,
@@ -192,25 +218,12 @@ class VoucherVaultApiClient:
             return ApiData()
         return ApiData.from_api_response(raw_data)
 
-    # async def get_vouchers(self) -> list[dict]:
-    #     """Fetch all vouchers."""
-    #     return await self.get_stats()["item_details"]
-
-    # async def get_coupons(self) -> list[dict]:
-    #     """Fetch all coupons."""
-
-    # async def get_gift_cards(self) -> list[dict]:
-    #     """Fetch all gift cards."""
-
-    # async def get_loyalty_cards(self) -> list[dict]:
-    #     """Fetch all loyalty cards."""
-
-    # # ------------------------------------------------------------------ #
-    # # POST / PATCH / DELETE  (if needed)
-    # # ------------------------------------------------------------------ #
-
-    # async def redeem_voucher(self, voucher_id: int) -> bool:
-    #     """Mark a voucher as redeemed."""
-
-    # async def add_transaction(self, gift_card_id: int, amount: float) -> bool:
-    #     """Log a transaction against a gift card."""
+    async def toggle_item_status(self, item_id: str) -> bool:
+        """Toggle the status of an item (e.g. redeem/unredeem a voucher)."""
+        _LOGGER.debug("Toggling status for item %s", item_id)
+        endpoint = f"/en/items/toggle_status/{item_id}"
+        resp = await self.send_post_with_session("POST", endpoint, data={})
+        if resp.get("success"):
+            _LOGGER.info("Successfully toggled status for item %s", item_id)
+        else:
+            _LOGGER.error("Failed to toggle status for item %s", item_id)
