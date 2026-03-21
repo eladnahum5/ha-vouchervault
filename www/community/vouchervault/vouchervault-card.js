@@ -130,7 +130,16 @@ class VoucherVaultCard extends HTMLElement {
 
         // Get the entity ID from the configuration and retrieve the item details from the Home Assistant state
         const entityId = this.config.entity;
-        const itemDetails = hass.states[entityId].attributes.items;  // updated attribute name
+        const state = hass.states[entityId];
+        if (!state) {
+            this.content.innerHTML = `<p>Entity not found: ${entityId}</p>`;
+            return;
+        }
+        const itemDetails = state.attributes.items;
+        if (!itemDetails) {
+            this.content.innerHTML = `<p>No items data yet.</p>`;
+            return;
+        }
 
         // Loop over the item details and create a list of vouchers
         const seperatorHtml = `<div class="separator"><br><hr></div>`;
