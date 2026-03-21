@@ -128,7 +128,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the VoucherVault sensor platform."""
     coordinator: VoucherVaultCoordinator = entry.runtime_data
-    unique_id_prefix = f"{DOMAIN}_{entry.data['host']}_{entry.data['port']}"
+    unique_id_prefix = f"{entry.data['host']}_{entry.data['port']}"
     async_add_entities(
         VoucherVaultBaseSensor(coordinator, unique_id_prefix, description)
         for description in SENSOR_DESCRIPTIONS
