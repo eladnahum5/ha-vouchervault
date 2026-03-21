@@ -16,13 +16,6 @@ from .vouchervault import ApiData, VoucherVaultApiClient
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(entry: ConfigEntry):
-    """Set up the VoucherVault coordinator from a config entry."""
-    coordinator = entry.runtime_data
-    await coordinator.async_config_entry_first_refresh()
-
-
-# Coordinator to manage fetching data from the VoucherVault API.
 class VoucherVaultCoordinator(DataUpdateCoordinator[ApiData]):
     """Coordinator to manage fetching data from the VoucherVault API."""
 

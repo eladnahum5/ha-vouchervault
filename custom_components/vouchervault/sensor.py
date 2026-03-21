@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import VoucherVaultCoordinator
@@ -135,7 +135,7 @@ async def async_setup_entry(
     )
 
 
-class VoucherVaultBaseSensor(SensorEntity):
+class VoucherVaultBaseSensor(CoordinatorEntity[VoucherVaultCoordinator], SensorEntity):
     """Base class for VoucherVault sensors."""
 
     entity_description: VoucherVaultSensorEntityDescription
@@ -147,27 +147,16 @@ class VoucherVaultBaseSensor(SensorEntity):
         entity_description: VoucherVaultSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        self.coordinator = coordinator
+        super().__init__(coordinator)
         self.entity_description = entity_description
         self._attr_unique_id = f"{unique_id_prefix}_{entity_description.key}"
-        self._attr_available = False
 
-    async def async_update(self) -> None:
-        """Fetch updated state data from the coordinator."""
-        try:
-            await self.coordinator.async_request_refresh()
-        except UpdateFailed:
-            self._attr_available = False
-            return
-
+    @property
+    def native_value(self) -> int | float | str | None:
+        """Return the state of the sensor."""
         if self.coordinator.data is None:
-            self._attr_available = False
-            return
-
-        self._attr_available = True
-        self._attr_native_value = self.entity_description.value_fn(
-            self.coordinator.data
-        )
+            return None
+        return self.entity_description.value_fn(self.coordinator.data)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
