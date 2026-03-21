@@ -19,8 +19,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .api import VoucherVaultApiClient
 from .const import DOMAIN
+from .vouchervault import VoucherVaultApiClient
 
 _LOGGER = logging.getLogger(__name__)
 

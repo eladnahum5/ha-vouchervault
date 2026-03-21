@@ -1,0 +1,60 @@
+"""Coordinator for VoucherVault integration."""
+
+from __future__ import annotations
+
+import asyncio
+from datetime import timedelta
+import logging
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN, UPDATE_INTERVAL_MINUTES
+from .vouchervault import ApiData, VoucherVaultApiClient
+
+_LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_entry(entry: ConfigEntry):
+    """Set up the VoucherVault coordinator from a config entry."""
+    coordinator = entry.runtime_data
+    await coordinator.async_config_entry_first_refresh()
+
+
+# Coordinator to manage fetching data from the VoucherVault API.
+class VoucherVaultCoordinator(DataUpdateCoordinator[ApiData]):
+    """Coordinator to manage fetching data from the VoucherVault API."""
+
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            config_entry=config_entry,
+            update_interval=timedelta(minutes=UPDATE_INTERVAL_MINUTES),
+        )
+
+        self.client = VoucherVaultApiClient(
+            host=config_entry.data["host"],
+            port=config_entry.data["port"],
+            username=config_entry.data["username"],
+            password=config_entry.data["password"],
+            api_token=config_entry.data["api_token"],
+        )
+
+    async def _async_setup(self) -> None:
+        """Perform any setup needed before the first data fetch."""
+        _LOGGER.debug("Currently no additional setup needed before first data fetch")
+
+    async def _async_update_data(self) -> ApiData:
+        try:
+            async with asyncio.timeout(10):
+                return await self.client.get_stats()
+        except TimeoutError as e:
+            raise UpdateFailed(
+                f"Timeout fetching data from VoucherVault API: {e}"
+            ) from e
+        except UpdateFailed as e:
+            raise UpdateFailed(f"Error fetching data from VoucherVault API: {e}") from e
