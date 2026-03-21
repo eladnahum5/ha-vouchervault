@@ -6,14 +6,13 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall
 
 from .const import DOMAIN
 from .coordinator import VoucherVaultCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-# For your initial PR, limit it to 1 platform.
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 type VoucherVaultConfigEntry = ConfigEntry[VoucherVaultCoordinator]
@@ -24,8 +23,6 @@ async def async_setup_entry(
 ) -> bool:
     """Set up VoucherVault from a config entry."""
 
-    # verification of credentials and connectivity is handled in the config flow,
-    # so if we are here we can assume the API client will work.
     coordinator = VoucherVaultCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
