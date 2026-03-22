@@ -1,13 +1,14 @@
 {
   "domain": "vouchervault",
-  "name": "VoucherVault",
+  "documentation": "https://github.com/eladnahum5/ha-vouchervault",
+  "issue_tracker": "https://github.com/eladnahum5/ha-vouchervault/issues",
   "codeowners": [
     "@eladnahum5"
   ],
+  "name": "VoucherVault",
+  "version": "0.1.0",
   "config_flow": true,
-  "documentation": "https://github.com/eladnahum5/ha-vouchervault",
   "iot_class": "local_polling",
   "integration_type": "service",
-  "version": "0.1.0",
   "single_config_entry": true
 }
