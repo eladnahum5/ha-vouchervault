@@ -42,13 +42,15 @@ Then add the card to any dashboard using the card type `custom:vouchervault-card
 
 ```yaml
 type: custom:vouchervault-card
-entity: sensor.vouchervault_items  # required
-barcodePadding: 20                 # optional, default: 20
+entity: sensor.vouchervault_192_168_1_100_8000_item_details  # replace with your entity ID
+barcodePadding: 20                                           # optional, default: 20
 ```
+
+The entity ID follows the pattern `sensor.vouchervault_<host>_<port>_item_details`, where `<host>` has dots replaced by underscores. For example, if your VoucherVault instance runs at `192.168.1.100:8000`, the entity ID is `sensor.vouchervault_192_168_1_100_8000_item_details`. You can find the exact ID in **Settings → Devices & Services → VoucherVault → Entities**.
 
 | Parameter | Required | Default | Description |
 |-----------|----------|---------|-------------|
-| `entity` | Yes | — | The VoucherVault sensor entity ID |
+| `entity` | Yes | — | The `item_details` sensor entity ID (see pattern above) |
 | `barcodePadding` | No | `20` | Padding (in pixels) around rendered barcodes |
 
 ## Services
