@@ -88,29 +88,42 @@ class VoucherVaultCard extends HTMLElement {
             throw new Error("You need to define an entity");
         }
 
-
         // Store the configuration and set default values for optional parameters
         this.config = {
             ...config,
-            quietZone: config.quietZone || 10, // Default quiet zone for barcode images
-            qunit: config.qunit || 'Pixel' // Default qunit for barcode images
+            barcodePadding: config.barcodePadding ?? 20,
         };
+
+        // Inject bwip-js once for client-side barcode rendering
+        if (!document.getElementById('bwip-js-script')) {
+            const script = document.createElement('script');
+            script.id = 'bwip-js-script';
+            script.src = 'https://cdn.jsdelivr.net/npm/bwip-js/dist/bwip-js-min.js';
+            document.head.appendChild(script);
+        }
     }
 
-    _generateRedeemLink(redeem_code, code_type) {
-        // Generate a link to the barcode image using the Tec-IT Barcode Generator API
-        const baseUrl = 'https://barcode.tec-it.com/barcode.ashx';
-        const quietZone = this.config.quietZone;
-        const qunit = this.config.qunit;
-        return `${baseUrl}?data=${redeem_code}&code=${code_type}&quietzone=${quietZone}&qunit=${qunit}`;
-    }
-
-    _toggleImageBlur(imgElement) {
-        // Toggle the blur effect on the image when clicked
-        if (imgElement.style.filter === 'blur(5px)') {
-            imgElement.style.filter = 'none';
-        } else {
-            imgElement.style.filter = 'blur(5px)';
+    _renderBwipBarcodes() {
+        const padding = this.config.barcodePadding;
+        for (const canvas of this.content.querySelectorAll('canvas[data-bwip]')) {
+            try {
+                window.bwipjs.toCanvas(
+                    canvas,
+                    {
+                        bcid: canvas.dataset.codeType,
+                        text: canvas.dataset.code,
+                        scale: 2,
+                        includetext: true,
+                        backgroundcolor: 'ffffff',
+                        paddingwidth: padding,
+                        paddingheight: padding,
+                    });
+            } catch (e) {
+                canvas.parentElement.insertAdjacentHTML(
+                    'beforeend',
+                    `<span style="color:red;font-size:0.8em">bwip-js: ${e.message}</span>`
+                );
+            }
         }
     }
 
@@ -151,19 +164,19 @@ class VoucherVaultCard extends HTMLElement {
             if (item.is_used) {
                 continue; // Skip used vouchers
             }
-            const link_to_redeem = this._generateRedeemLink(item.redeem_code, item.code_type);
             vouchersHtml += `
                 <div class="voucher-item">
                     Name: ${item.name}<br>
                     Issuer: ${item.issuer}<br>
                     Value: ${item.value}<br>
                     <mark-as-used-button item_id="${item.id}" entity="${entityId}"></mark-as-used-button><br><br>
-                    <img
-                        src="${link_to_redeem}"
-                        alt="Voucher Image"
-                        style="filter: blur(5px); cursor: pointer;"
-                        onclick="this._toggleImageBlur ? this._toggleImageBlur(this) : (this.style.filter = this.style.filter === 'blur(5px)' ? 'none' : 'blur(5px)')"
-                    ><br>
+                    <canvas
+                        data-bwip
+                        data-code="${item.redeem_code}"
+                        data-code-type="${item.code_type}"
+                        style="filter: blur(5px); cursor: pointer; display: block;"
+                        onclick="this.style.filter = this.style.filter === 'blur(5px)' ? 'none' : 'blur(5px)'"
+                    ></canvas><br>
                 </div>
                 ${seperatorHtml}
             `;
@@ -177,6 +190,14 @@ class VoucherVaultCard extends HTMLElement {
         }
         for (const button of this.content.querySelectorAll("mark-as-used-button")) {
             button.hass = hass;
+        }
+
+        // Render bwip-js barcodes — wait for script load if not ready yet
+        if (window.bwipjs) {
+            this._renderBwipBarcodes();
+        } else {
+            const script = document.getElementById('bwip-js-script');
+            if (script) script.addEventListener('load', () => this._renderBwipBarcodes(), { once: true });
         }
     }
 }
