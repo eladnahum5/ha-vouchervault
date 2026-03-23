@@ -4,7 +4,6 @@ import {
     css
 } from "https://unpkg.com/lit-element@2.0.1/lit-element.js?module";
 
-// Define a reusable CSS style for buttons
 const buttonStyle = css`
     button {
         padding: 10px 16px;
@@ -16,39 +15,32 @@ const buttonStyle = css`
     }
 `;
 
-// Define a custom element for the refresh button using LitElement
 class VoucherRefreshButton extends LitElement {
-    // Define the properties for the refresh button
     static get properties() {
         return {
             hass: { type: Object },
-            entity: { type: String }  // replaces hardcoded entity ID
+            entity: { type: String }
         };
     }
 
-    // Handle the click event to refresh the voucher items
     async _click() {
         await this.hass.callService("homeassistant", "update_entity", {
             entity_id: this.entity
         });
     }
 
-    // Render the refresh button
     render() {
         return html`
             <button @click=${this._click}>Refresh Items</button>
         `;
     }
 
-    // Define styles for the refresh button
     static get styles() {
         return buttonStyle;
     }
 }
 
-// Define a custom element for the "Mark as Used" button
 class VoucherMarkUsedButton extends LitElement {
-    // Define the properties for the "Mark as Used" button
     static get properties() {
         return {
             item_id: { type: String },
@@ -57,25 +49,22 @@ class VoucherMarkUsedButton extends LitElement {
         };
     }
 
-    // Handle the click event to mark the voucher as used and refresh the item list
     async _click() {
-        // TODO: replace with vouchervault.toggle_item_status once implemented in the integration
         await this.hass.callService("vouchervault", "toggle_item_status", {
             item_id: this.item_id
         });
+        // Refresh the entity so the card reflects the updated status immediately
         await this.hass.callService("homeassistant", "update_entity", {
             entity_id: this.entity
         });
     }
 
-    // Render the "Mark as Used" button
     render() {
         return html`
             <button @click=${this._click}>Mark as Used</button>
         `;
     }
 
-    // Define styles for the "Mark as Used" button
     static get styles() {
         return buttonStyle;
     }
@@ -83,12 +72,10 @@ class VoucherMarkUsedButton extends LitElement {
 
 class VoucherVaultCard extends HTMLElement {
     setConfig(config) {
-        // Validate that the required configuration options are provided
         if (!config.entity) {
             throw new Error("You need to define an entity");
         }
 
-        // Store the configuration and set default values for optional parameters
         this.config = {
             ...config,
             barcodePadding: config.barcodePadding ?? 20,
@@ -151,9 +138,9 @@ class VoucherVaultCard extends HTMLElement {
             `;
     }
 
-    // Called when the card is added to the DOM
+    // Called by Home Assistant each time the state changes
     set hass(hass) {
-        // If the card content hasn't been initialized yet, create the basic structure
+        // Initialize card structure on first render
         if (!this.content) {
             this.innerHTML = `
                 <ha-card header="Voucher Vault">
@@ -162,10 +149,9 @@ class VoucherVaultCard extends HTMLElement {
                     </div>
                 </ha-card>
             `;
-            this.content = this.querySelector('.card-content'); // Cache the content element for later updates
+            this.content = this.querySelector('.card-content');
         }
 
-        // Get the entity ID from the configuration and retrieve the item details from the Home Assistant state
         const entityId = this.config.entity;
         const state = hass.states[entityId];
         if (!state) {
@@ -178,24 +164,24 @@ class VoucherVaultCard extends HTMLElement {
             return;
         }
 
-        // Loop over the item details and create a list of vouchers
-        const seperatorHtml = `<div class="separator"><br><hr></div>`;
+        const separatorHtml = `<div class="separator"><br><hr></div>`;
         let vouchersHtml = `
             <voucher-refresh-button entity="${entityId}">Test</voucher-refresh-button>
-            ${seperatorHtml}
+            ${separatorHtml}
         `;
         for (const item of itemDetails) {
             if (item.is_used) {
-                continue; // Skip used vouchers
+                continue; // Skip already-used vouchers
             }
             vouchersHtml += `
                 ${this.generateItemHtml(item, entityId)}
-                ${seperatorHtml}
+                ${separatorHtml}
             `;
         }
 
-        // Update the card content with the list of vouchers
         this.content.innerHTML = vouchersHtml;
+
+        // Pass the hass object to LitElement sub-components so they can call services
         const refreshButton = this.content.querySelector("voucher-refresh-button");
         if (refreshButton) {
             refreshButton.hass = hass;
@@ -204,7 +190,7 @@ class VoucherVaultCard extends HTMLElement {
             button.hass = hass;
         }
 
-        // Render bwip-js barcodes — wait for script load if not ready yet
+        // Render barcodes, or defer until bwip-js finishes loading
         if (window.bwipjs) {
             this._renderBwipBarcodes();
         } else {
@@ -214,7 +200,6 @@ class VoucherVaultCard extends HTMLElement {
     }
 }
 
-// Define the custom element so it can be used in Home Assistant Lovelace UI
 customElements.define('vouchervault-card', VoucherVaultCard);
 customElements.define("mark-as-used-button", VoucherMarkUsedButton);
 customElements.define("voucher-refresh-button", VoucherRefreshButton);
