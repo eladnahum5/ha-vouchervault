@@ -1,0 +1,18 @@
+{
+  "release-type": "simple",
+  "include-v-in-tag": true,
+  "include-component-in-tag": false,
+  "pull-request-title-pattern": "chore${scope}: release${component} ${version}",
+  "packages": {
+    ".": {
+      "package-name": "ha-vouchervault",
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "custom_components/vouchervault/manifest.json",
+          "jsonpath": "$.version"
+        }
+      ]
+    }
+  }
+}
