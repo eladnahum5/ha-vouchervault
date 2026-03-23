@@ -90,8 +90,8 @@ class VoucherVaultCard extends HTMLElement {
 
         this.config = {
             ...config,
-            barcodePadding: config.barcodePadding ?? 10,
-            fieldsToShow: config.fieldsToShow ?? ["name", "issuer", "value", "expiry_date"]
+            barcode_padding: config.barcode_padding ?? 10,
+            fields_to_show: config.fields_to_show ?? ["name", "issuer", "value", "expiry_date"]
         };
 
         // Inject bwip-js once for client-side barcode rendering
@@ -112,7 +112,7 @@ class VoucherVaultCard extends HTMLElement {
     }
 
     _renderBwipBarcodes() {
-        const padding = this.config.barcodePadding;
+        const padding = this.config.barcode_padding;
         for (const canvas of this.content.querySelectorAll('canvas[data-bwip]')) {
             try {
                 window.bwipjs.toCanvas(
@@ -151,9 +151,9 @@ class VoucherVaultCard extends HTMLElement {
     }
 
     generateItemHtml(item, entityId) {
-        // Loop through fieldsToShow and only include those in the output
+        // Loop through fields_to_show and only include those in the output
         let fieldsHtml = '';
-        for (const field of this.config.fieldsToShow) {
+        for (const field of this.config.fields_to_show) {
             if (item[field]) {
                 // Capitalise each word and replace underscores with spaces for display
                 const displayField = field.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
