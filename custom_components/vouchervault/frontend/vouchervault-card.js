@@ -178,22 +178,38 @@ class VoucherVaultCard extends HTMLElement {
             return;
         }
 
-        const separatorHtml = `<div class="separator"><br><hr></div>`;
-        let vouchersHtml = `
-            <voucher-refresh-button entity="${entityId}">Test</voucher-refresh-button>
-            ${separatorHtml}
-        `;
-        for (const item of itemDetails) {
-            if (item.is_used) {
-                continue; // Skip already-used vouchers
-            }
-            vouchersHtml += `
-                ${this.generateItemHtml(item, entityId)}
+        // Only rebuild the DOM when items data actually changes, so user-toggled
+        // blur states are not reset on every HA state update (which fires frequently
+        // on mobile and would otherwise reset the blur within seconds).
+        const itemsJson = JSON.stringify(itemDetails);
+        if (this._lastItemsJson !== itemsJson) {
+            this._lastItemsJson = itemsJson;
+
+            const separatorHtml = `<div class="separator"><br><hr></div>`;
+            let vouchersHtml = `
+                <voucher-refresh-button entity="${entityId}">Test</voucher-refresh-button>
                 ${separatorHtml}
             `;
-        }
+            for (const item of itemDetails) {
+                if (item.is_used) {
+                    continue; // Skip already-used vouchers
+                }
+                vouchersHtml += `
+                    ${this.generateItemHtml(item, entityId)}
+                    ${separatorHtml}
+                `;
+            }
 
-        this.content.innerHTML = vouchersHtml;
+            this.content.innerHTML = vouchersHtml;
+
+            // Render barcodes, or defer until bwip-js finishes loading
+            if (window.bwipjs) {
+                this._renderBwipBarcodes();
+            } else {
+                const script = document.getElementById('bwip-js-script');
+                if (script) script.addEventListener('load', () => this._renderBwipBarcodes(), { once: true });
+            }
+        }
 
         // Pass the hass object to LitElement sub-components so they can call services
         const refreshButton = this.content.querySelector("voucher-refresh-button");
@@ -202,14 +218,6 @@ class VoucherVaultCard extends HTMLElement {
         }
         for (const button of this.content.querySelectorAll("mark-as-used-button")) {
             button.hass = hass;
-        }
-
-        // Render barcodes, or defer until bwip-js finishes loading
-        if (window.bwipjs) {
-            this._renderBwipBarcodes();
-        } else {
-            const script = document.getElementById('bwip-js-script');
-            if (script) script.addEventListener('load', () => this._renderBwipBarcodes(), { once: true });
         }
     }
 }
