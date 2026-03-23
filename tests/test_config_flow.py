@@ -2,21 +2,21 @@
 
 from unittest.mock import AsyncMock, patch
 
-import pytest # type: ignore
+import pytest
 
 from custom_components.vouchervault.config_flow import CannotConnect, InvalidAuth
 from custom_components.vouchervault.const import DOMAIN
 
-from homeassistant import config_entries # type: ignore
-from homeassistant.const import ( # type: ignore
+from homeassistant import config_entries
+from homeassistant.const import (
     CONF_API_TOKEN,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant # type: ignore
-from homeassistant.data_entry_flow import FlowResultType # type: ignore
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 
 pytestmark = pytest.mark.usefixtures("enable_custom_integrations")
@@ -113,6 +113,51 @@ async def test_form_invalid_auth(
         CONF_API_TOKEN: "test-token",
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_unknown_error(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test we handle an unexpected exception."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "custom_components.vouchervault.config_flow.validate_input",
+        side_effect=Exception("Unexpected"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 8000,
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_API_TOKEN: "test-token",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+    with patch(
+        "custom_components.vouchervault.config_flow.validate_input",
+        return_value={"title": "1.1.1.1:8000"},
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 8000,
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_API_TOKEN: "test-token",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_cannot_connect(

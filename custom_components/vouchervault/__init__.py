@@ -25,25 +25,6 @@ async def async_setup_entry(
 ) -> bool:
     """Set up VoucherVault from a config entry."""
 
-    await hass.http.async_register_static_paths(
-        [
-            StaticPathConfig(
-                "/vouchervault/vouchervault-card.js",
-                str(Path(__file__).parent / "frontend" / "vouchervault-card.js"),
-                cache_headers=False,
-            )
-        ]
-    )
-
-    # Future: auto-register as Lovelace resource so users don't need to add it manually.
-    # Requires: lovelace = hass.data["lovelace"]
-    # Only works in storage mode (not YAML mode).
-    # Example:
-    #   if lovelace.mode == MODE_STORAGE:
-    #       await lovelace.resources.async_create_item(
-    #           {"res_type": "module", "url": "/vouchervault/vouchervault-card.js"}
-    #       )
-
     coordinator = VoucherVaultCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
@@ -59,6 +40,16 @@ async def async_setup_entry(
 
     hass.services.async_register(
         DOMAIN, "toggle_item_status", handle_toggle_item_status
+    )
+
+    await hass.http.async_register_static_paths(
+        [
+            StaticPathConfig(
+                "/vouchervault/vouchervault-card.js",
+                str(Path(__file__).parent / "frontend" / "vouchervault-card.js"),
+                cache_headers=False,
+            )
+        ]
     )
 
     return True

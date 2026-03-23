@@ -64,7 +64,8 @@ async def test_coordinator_refresh_updates_data(
     mock_vouchervault_client: AsyncMock,
 ) -> None:
     """Test coordinator data is updated after a manual refresh."""
-    from tests.conftest import MOCK_API_DATA
+    from conftest import MOCK_API_DATA
+
     from custom_components.vouchervault.vouchervault import ApiData
 
     coordinator: VoucherVaultCoordinator = init_integration.runtime_data

@@ -143,7 +143,7 @@ class VoucherVaultApiClient:
         return session
 
     async def send_post_with_session(
-        self, request_type: str, endpoint: str, data=None
+        self, request_type: str, endpoint: str, data: dict[str, Any] | None = None
     ) -> dict | None:
         """Helper method to perform authenticated POST requests using a session cookie."""
         session = await self.login_and_get_session()
@@ -169,7 +169,7 @@ class VoucherVaultApiClient:
             return {"success": True}
 
     async def send_api_request(
-        self, request_type: str, endpoint: str, data=None
+        self, request_type: str, endpoint: str, data: dict[str, Any] | None = None
     ) -> dict | None:
         """Helper method to perform requests to the API.
 

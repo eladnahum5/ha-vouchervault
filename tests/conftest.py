@@ -18,6 +18,25 @@ from homeassistant.core import HomeAssistant
 from custom_components.vouchervault.const import DOMAIN
 from custom_components.vouchervault.vouchervault import ApiData
 
+
+@pytest.fixture(autouse=True)
+def mock_frontend_setup() -> Generator[None]:
+    """Mock the frontend component setup to avoid the missing hass_frontend dependency."""
+    with patch(
+        "homeassistant.components.frontend.async_setup", return_value=True
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_register_static_paths() -> Generator[None]:
+    """Mock async_register_static_paths to avoid file-system access in tests."""
+    with patch(
+        "homeassistant.components.http.HomeAssistantHTTP.async_register_static_paths",
+        new=AsyncMock(),
+    ):
+        yield
+
 MOCK_CONFIG = {
     CONF_HOST: "192.168.1.100",
     CONF_PORT: 8000,

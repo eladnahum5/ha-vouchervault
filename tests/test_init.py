@@ -55,6 +55,36 @@ async def test_service_unregistered_on_unload(
     assert not hass.services.has_service(DOMAIN, "toggle_item_status")
 
 
+async def test_service_toggle_item_status_calls_client(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_vouchervault_client: AsyncMock,
+) -> None:
+    """Test that calling toggle_item_status service invokes the API client."""
+    await hass.services.async_call(
+        DOMAIN,
+        "toggle_item_status",
+        {"item_id": "abc123"},
+        blocking=True,
+    )
+    mock_vouchervault_client.toggle_item_status.assert_called_once_with("abc123")
+
+
+async def test_service_toggle_item_status_no_item_id(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_vouchervault_client: AsyncMock,
+) -> None:
+    """Test that calling toggle_item_status without item_id does not call the client."""
+    await hass.services.async_call(
+        DOMAIN,
+        "toggle_item_status",
+        {},
+        blocking=True,
+    )
+    mock_vouchervault_client.toggle_item_status.assert_not_called()
+
+
 async def test_setup_entry_coordinator_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

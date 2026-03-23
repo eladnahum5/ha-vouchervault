@@ -37,11 +37,8 @@ class VoucherVaultCoordinator(DataUpdateCoordinator[ApiData]):
             api_token=config_entry.data["api_token"],
         )
 
-    async def _async_setup(self) -> None:
-        """Perform any setup needed before the first data fetch."""
-        _LOGGER.debug("Currently no additional setup needed before first data fetch")
-
     async def _async_update_data(self) -> ApiData:
+        """Fetch data from the VoucherVault API."""
         try:
             async with asyncio.timeout(10):
                 return await self.client.get_stats()

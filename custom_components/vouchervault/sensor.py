@@ -111,7 +111,6 @@ SENSOR_DESCRIPTIONS: tuple[VoucherVaultSensorEntityDescription, ...] = (
                     "description": item.get("description"),
                     "is_used": item.get("is_used"),
                     "user": item.get("user__username"),
-                    # TODO: Redact sensitive values before production release.
                     "redeem_code": item.get("redeem_code"),
                     "code_type": item.get("code_type"),
                     "pin": item.get("pin"),
