@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.2](https://github.com/eladnahum5/ha-vouchervault/compare/v0.2.1...v0.2.2) (2026-03-23)
+
+
+### Bug Fixes
+
+* reorder fields in manifest.json for clarity ([180494d](https://github.com/eladnahum5/ha-vouchervault/commit/180494d9dcc3c56507fd527d355e35110ea58f8b))
+* reorder fields in manifest.json for clarity ([06f1b49](https://github.com/eladnahum5/ha-vouchervault/commit/06f1b49212043524999b8d16dcac3661514da1c0))
+
 ## [0.2.1](https://github.com/eladnahum5/ha-vouchervault/compare/v0.2.0...v0.2.1) (2026-03-23)
 
 
