@@ -4,6 +4,16 @@ import {
     css
 } from "https://unpkg.com/lit-element@2.0.1/lit-element.js?module";
 
+// Escape special HTML characters to prevent broken markup or XSS when
+// inserting untrusted strings into innerHTML.
+function escHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
 const buttonStyle = css`
     button {
         padding: 10px 16px;
@@ -30,8 +40,10 @@ class VoucherRefreshButton extends LitElement {
     }
 
     render() {
+        // Arrow function ensures `this` refers to the LitElement instance, not
+        // the native button element that fired the event.
         return html`
-            <button @click=${this._click}>Refresh Items</button>
+            <button @click=${() => this._click()}>Refresh Items</button>
         `;
     }
 
@@ -61,7 +73,7 @@ class VoucherMarkUsedButton extends LitElement {
 
     render() {
         return html`
-            <button @click=${this._click}>Mark as Used</button>
+            <button @click=${() => this._click()}>Mark as Used</button>
         `;
     }
 
@@ -78,8 +90,8 @@ class VoucherVaultCard extends HTMLElement {
 
         this.config = {
             ...config,
-            barcodePadding: config.barcodePadding ?? 20,
-            fieldsToShow: config.fieldsToShow ?? ["name", "issuer", "value"]
+            barcodePadding: config.barcodePadding ?? 10,
+            fieldsToShow: config.fieldsToShow ?? ["name", "issuer", "value", "expiry_date"]
         };
 
         // Inject bwip-js once for client-side barcode rendering
@@ -89,6 +101,14 @@ class VoucherVaultCard extends HTMLElement {
             script.src = 'https://cdn.jsdelivr.net/npm/bwip-js/dist/bwip-js-min.js';
             document.head.appendChild(script);
         }
+    }
+
+    // HA calls this before the card renders to reserve space in the grid
+    // (prevents layout jumping). The value is in grid rows (~50px each) and
+    // is just a hint — it cannot be dynamic based on actual content, so 3 is
+    // a reasonable default for a medium-sized card.
+    getCardSize() {
+        return 3;
     }
 
     _renderBwipBarcodes() {
@@ -111,42 +131,42 @@ class VoucherVaultCard extends HTMLElement {
             } catch (e) {
                 canvas.parentElement.insertAdjacentHTML(
                     'beforeend',
-                    `<span style="color:red;font-size:0.8em">bwip-js: ${e.message}</span>`
+                    `<span style="color:red;font-size:0.8em">bwip-js: ${escHtml(e.message)}</span>`
                 );
             }
         }
     }
 
     generateBarcodeHtml(code, codeType) {
+        // HA's Content Security Policy blocks inline onclick handlers, so the
+        // blur toggle is handled via event delegation added during initialisation.
         return `
             <canvas
                 data-bwip
-                data-code="${code}"
-                data-code-type="${codeType}"
+                data-code="${escHtml(code)}"
+                data-code-type="${escHtml(codeType)}"
                 style="filter: blur(5px); cursor: pointer; display: block;"
-                onclick="this.style.filter = this.style.filter === 'blur(5px)' ? 'none' : 'blur(5px)'"
             ></canvas>
         `;
     }
 
     generateItemHtml(item, entityId) {
-        // loop through fieldsToShow and only include those in the output
+        // Loop through fieldsToShow and only include those in the output
         let fieldsHtml = '';
         for (const field of this.config.fieldsToShow) {
             if (item[field]) {
-                // Capitalize the all first letters of the field name for display and replace underscores with spaces
+                // Capitalise each word and replace underscores with spaces for display
                 const displayField = field.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
-                fieldsHtml += `${displayField}: ${item[field]}<br>`;
-            }
-            else {
-                // raise error in UI if field is not found in item
-                fieldsHtml += `<span style="color:red;font-size:0.8em">Field not found: ${field}</span><br>`;
+                fieldsHtml += `${escHtml(displayField)}: ${escHtml(item[field])}<br>`;
+            } else {
+                // Warn in the UI if a configured field is absent from the item data
+                fieldsHtml += `<span style="color:red;font-size:0.8em">Field not found: ${escHtml(field)}</span><br>`;
             }
         }
         return `
                 <div class="voucher-item">
                     ${fieldsHtml}
-                    <mark-as-used-button item_id="${item.id}" entity="${entityId}"></mark-as-used-button><br><br>
+                    <mark-as-used-button item_id="${escHtml(item.id)}" entity="${escHtml(entityId)}"></mark-as-used-button><br><br>
                     ${this.generateBarcodeHtml(item.redeem_code, item.code_type)}<br>
                 </div>
             `;
@@ -164,12 +184,21 @@ class VoucherVaultCard extends HTMLElement {
                 </ha-card>
             `;
             this.content = this.querySelector('.card-content');
+
+            // Delegate canvas clicks here once so the listener survives innerHTML
+            // replacements. HA's CSP blocks inline onclick attributes.
+            this.content.addEventListener('click', (e) => {
+                if (e.target.matches('canvas[data-bwip]')) {
+                    const c = e.target;
+                    c.style.filter = c.style.filter === 'blur(5px)' ? 'none' : 'blur(5px)';
+                }
+            });
         }
 
         const entityId = this.config.entity;
         const state = hass.states[entityId];
         if (!state) {
-            this.content.innerHTML = `<p>Entity not found: ${entityId}</p>`;
+            this.content.innerHTML = `<p>Entity not found: ${escHtml(entityId)}</p>`;
             return;
         }
         const itemDetails = state.attributes.items;
@@ -187,7 +216,7 @@ class VoucherVaultCard extends HTMLElement {
 
             const separatorHtml = `<div class="separator"><br><hr></div>`;
             let vouchersHtml = `
-                <voucher-refresh-button entity="${entityId}">Test</voucher-refresh-button>
+                <voucher-refresh-button entity="${escHtml(entityId)}">Test</voucher-refresh-button>
                 ${separatorHtml}
             `;
             for (const item of itemDetails) {
@@ -225,3 +254,11 @@ class VoucherVaultCard extends HTMLElement {
 customElements.define('vouchervault-card', VoucherVaultCard);
 customElements.define("mark-as-used-button", VoucherMarkUsedButton);
 customElements.define("voucher-refresh-button", VoucherRefreshButton);
+
+// Register the card so it appears in the HA dashboard card picker UI.
+window.customCards = window.customCards || [];
+window.customCards.push({
+    type: 'vouchervault-card',
+    name: 'VoucherVault Card',
+    description: 'Display and manage vouchers from VoucherVault'
+});
