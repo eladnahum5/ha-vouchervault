@@ -79,6 +79,7 @@ class VoucherVaultCard extends HTMLElement {
         this.config = {
             ...config,
             barcodePadding: config.barcodePadding ?? 20,
+            fieldsToShow: config.fieldsToShow ?? ["name", "issuer", "value"]
         };
 
         // Inject bwip-js once for client-side barcode rendering
@@ -127,11 +128,23 @@ class VoucherVaultCard extends HTMLElement {
     }
 
     generateItemHtml(item, entityId) {
+        // loop through fieldsToShow and only include those in the output
+        let fieldsHtml = '';
+        for (const field of this.config.fieldsToShow) {
+            if (item[field]) {
+                // Capitalize the all first letters of the field name for display and replace underscores with spaces
+                const displayField = field.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+                fieldsHtml += `${displayField}: ${item[field]}<br>`;
+            }
+            else {
+                // raise error in UI if field is not found in item
+                fieldsHtml += `<span style="color:red;font-size:0.8em">Field not found: ${field}</span><br>`;
+            }
+
+        }
         return `
                 <div class="voucher-item">
-                    Name: ${item.name}<br>
-                    Issuer: ${item.issuer}<br>
-                    Value: ${item.value}<br>
+                    ${fieldsHtml}
                     <mark-as-used-button item_id="${item.id}" entity="${entityId}"></mark-as-used-button><br><br>
                     ${this.generateBarcodeHtml(item.redeem_code, item.code_type)}<br>
                 </div>
