@@ -127,6 +127,30 @@ class VoucherVaultCard extends HTMLElement {
         }
     }
 
+    generateBarcodeHtml(code, codeType) {
+        return `
+            <canvas
+                data-bwip
+                data-code="${code}"
+                data-code-type="${codeType}"
+                style="filter: blur(5px); cursor: pointer; display: block;"
+                onclick="this.style.filter = this.style.filter === 'blur(5px)' ? 'none' : 'blur(5px)'"
+            ></canvas>
+        `;
+    }
+
+    generateItemHtml(item, entityId) {
+        return `
+                <div class="voucher-item">
+                    Name: ${item.name}<br>
+                    Issuer: ${item.issuer}<br>
+                    Value: ${item.value}<br>
+                    <mark-as-used-button item_id="${item.id}" entity="${entityId}"></mark-as-used-button><br><br>
+                    ${this.generateBarcodeHtml(item.redeem_code, item.code_type)}<br>
+                </div>
+            `;
+    }
+
     // Called when the card is added to the DOM
     set hass(hass) {
         // If the card content hasn't been initialized yet, create the basic structure
@@ -165,19 +189,7 @@ class VoucherVaultCard extends HTMLElement {
                 continue; // Skip used vouchers
             }
             vouchersHtml += `
-                <div class="voucher-item">
-                    Name: ${item.name}<br>
-                    Issuer: ${item.issuer}<br>
-                    Value: ${item.value}<br>
-                    <mark-as-used-button item_id="${item.id}" entity="${entityId}"></mark-as-used-button><br><br>
-                    <canvas
-                        data-bwip
-                        data-code="${item.redeem_code}"
-                        data-code-type="${item.code_type}"
-                        style="filter: blur(5px); cursor: pointer; display: block;"
-                        onclick="this.style.filter = this.style.filter === 'blur(5px)' ? 'none' : 'blur(5px)'"
-                    ></canvas><br>
-                </div>
+                ${this.generateItemHtml(item, entityId)}
                 ${seperatorHtml}
             `;
         }
