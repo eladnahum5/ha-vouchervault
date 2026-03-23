@@ -69,14 +69,20 @@ Then add the card to any dashboard using the card type `custom:vouchervault-card
 
 ```yaml
 type: custom:vouchervault-card
-entity: sensor.vouchervault_192_168_1_100_8000_item_details  # replace with your entity ID
-barcodePadding: 20                                           # optional, default: 20
+entity: sensor.vouchervault_192_168_1_100_8000_item_details
+barcodePadding: 20
+fields_to_show:
+  - name
+  - issuer
+  - value
+  - expiry_date
 ```
 
 | Parameter | Required | Default | Description |
 |-----------|----------|---------|-------------|
 | `entity` | Yes | — | The `item_details` sensor entity ID |
 | `barcodePadding` | No | `20` | Padding (in pixels) around rendered barcodes |
+| `fields_to_show` | No | `["name", "issuer", "value", "expiry_date"]` | List of item fields to display on each voucher card |
 
 ## Services
 
