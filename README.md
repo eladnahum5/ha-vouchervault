@@ -42,7 +42,7 @@ After installation, go to **Settings → Devices & Services → Add Integration*
 
 ## Sensors
 
-The integration creates four sensor entities, all updated every 30 minutes (as recommended in the VoucherVault docs):
+The integration creates four sensor entities, all updated every 30 minutes (as recommended in the Home Assistant REST sensor section of the VoucherVault docs):
 
 | Entity | State | Attributes |
 |--------|-------|------------|
