@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/eladnahum5/ha-vouchervault/compare/v0.2.0...v0.2.1) (2026-03-23)
+
+
+### Bug Fixes
+
+* update UPDATE_INTERVAL_MINUTES to 30 as per Home Assistant REST sensor recommendations ([93148f7](https://github.com/eladnahum5/ha-vouchervault/commit/93148f7a39f1f5c1811855d1a09c65fe8af21402))
+
 ## [0.2.0](https://github.com/eladnahum5/ha-vouchervault/compare/v0.1.0...v0.2.0) (2026-03-23)
 
 
