@@ -42,7 +42,7 @@ After installation, go to **Settings → Devices & Services → Add Integration*
 
 ## Sensors
 
-The integration creates four sensor entities, all updated every 2 minutes:
+The integration creates four sensor entities, all updated every 30 minutes (as recommended in the Home Assistant REST sensor section of the VoucherVault docs):
 
 | Entity | State | Attributes |
 |--------|-------|------------|
@@ -98,5 +98,7 @@ Toggle the active/inactive status of a voucher item.
 
 - [ ] Auto-register the Lovelace card resource on setup (no manual resource step)
 - [ ] Configurable polling interval
+- [ ] Filter vouchers via card YAML (stage 1), then via UI (stage 2, may ship separately)
+- [ ] Sort vouchers via card YAML (stage 1), then via UI (stage 2, may ship separately)
 - [ ] Translations for popular languages
 - [ ] Submit to the default HACS store
