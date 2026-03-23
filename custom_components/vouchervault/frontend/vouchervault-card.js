@@ -106,6 +106,8 @@ class VoucherVaultCard extends HTMLElement {
                         paddingwidth: padding,
                         paddingheight: padding,
                     });
+                canvas.style.width = '100%';
+                canvas.style.height = 'auto';
             } catch (e) {
                 canvas.parentElement.insertAdjacentHTML(
                     'beforeend',
@@ -140,7 +142,6 @@ class VoucherVaultCard extends HTMLElement {
                 // raise error in UI if field is not found in item
                 fieldsHtml += `<span style="color:red;font-size:0.8em">Field not found: ${field}</span><br>`;
             }
-
         }
         return `
                 <div class="voucher-item">
