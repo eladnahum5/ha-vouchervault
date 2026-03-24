@@ -36,8 +36,8 @@ After installation, go to **Settings → Devices & Services → Add Integration*
 | Field | Description |
 |-------|-------------|
 | `Host` | Hostname or IP of your VoucherVault instance (e.g. `192.168.1.100`) |
-| `Port` | Port number (e.g. `8000`) |
-| `Username` | Your VoucherVault username |
+| `Port` | Port number (defaults to `8000`) |
+| `Username` | Your VoucherVault username (defaults to `admin`) |
 | `Password` | Your VoucherVault password |
 | `API token` | API token from your VoucherVault account settings |
 
