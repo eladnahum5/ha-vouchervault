@@ -88,11 +88,19 @@ async def _async_unregister_lovelace_resource(
 ) -> None:
     """Remove the Lovelace card resource that was registered on setup."""
     resource_id: str | None = hass.data.get(DOMAIN, {}).pop(entry_id, None)
-    if resource_id is None:
-        return
 
     resource_collection = _get_lovelace_resource_collection(hass)
     if not _is_resource_unregistration_collection(resource_collection):
+        return
+
+    # If resource ID is not found, search for it by URL
+    if resource_id is None:
+        for item in resource_collection.async_items():
+            if item.get(CONF_URL) == _CARD_URL:
+                resource_id = item["id"]
+                break
+
+    if resource_id is None:
         return
 
     try:
