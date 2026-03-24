@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/eladnahum5/ha-vouchervault/compare/v1.0.0...v1.0.1) (2026-03-24)
+
+
+### Bug Fixes
+
+* update default values for port and username in config flow and README ([4b84d97](https://github.com/eladnahum5/ha-vouchervault/commit/4b84d97557154fc352e73b7ae6c57385c36b7985))
+
 ## [1.0.0](https://github.com/eladnahum5/ha-vouchervault/compare/v0.2.2...v1.0.0) (2026-03-24)
 
 
