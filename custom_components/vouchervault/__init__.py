@@ -66,8 +66,13 @@ async def _async_unregister_lovelace_resource(
     try:
         await resource_collection.async_delete_item(resource_id)
         _LOGGER.debug("Removed Lovelace card resource: %s", _CARD_URL)
-    except Exception:  # noqa: BLE001
-        _LOGGER.debug("Could not remove Lovelace card resource %s", resource_id)
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.debug(
+            "Could not remove Lovelace card resource %s: %s",
+            resource_id,
+            err,
+            exc_info=True,
+        )
 
 
 async def async_setup_entry(
@@ -115,6 +120,10 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: VoucherVaultConfigEntry
 ) -> bool:
     """Unload a config entry."""
+    unloaded = await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    if not unloaded:
+        return False
+
     await _async_unregister_lovelace_resource(hass, entry.entry_id)
     hass.services.async_remove(DOMAIN, "toggle_item_status")
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    return True
