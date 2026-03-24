@@ -52,9 +52,7 @@ def _is_resource_unregistration_collection(resource_collection: object | None) -
     )
 
 
-async def _async_register_lovelace_resource(
-    hass: HomeAssistant, entry_id: str
-) -> None:
+async def _async_register_lovelace_resource(hass: HomeAssistant, entry_id: str) -> None:
     """Register the Lovelace card JS module if not already present."""
     resource_collection = _get_lovelace_resource_collection(hass)
     if not _is_resource_registration_collection(resource_collection):
@@ -142,9 +140,7 @@ async def async_setup_entry(
             [
                 StaticPathConfig(
                     _CARD_URL,
-                    str(
-                        Path(__file__).parent / "frontend" / "vouchervault-card.js"
-                    ),
+                    str(Path(__file__).parent / "frontend" / "vouchervault-card.js"),
                     cache_headers=False,
                 )
             ]
