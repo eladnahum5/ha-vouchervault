@@ -55,7 +55,17 @@ In entity IDs, dots in the host are replaced by underscores. For example, host `
 
 ## Dashboard card
 
-This integration ships with a companion Lovelace card. The card resource is registered automatically when the integration is set up — no manual steps required.
+This integration ships with a companion Lovelace card. When Lovelace is in **storage mode** (the default), the card resource is registered automatically when the integration is set up — no manual steps required.
+
+When Lovelace is in **YAML mode**, automatic registration is skipped. Add the resource manually to your `configuration.yaml`:
+
+```yaml
+lovelace:
+  mode: yaml
+  resources:
+    - url: /vouchervault/vouchervault-card.js
+      type: module
+```
 
 Add the card to any dashboard using the card type `custom:vouchervault-card`.
 
