@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.0.0](https://github.com/eladnahum5/ha-vouchervault/compare/v0.2.2...v1.0.0) (2026-03-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* automate Lovelace card resource registration during integration setup
+
+### Features
+
+* automate Lovelace card resource registration during integration setup ([d9f495d](https://github.com/eladnahum5/ha-vouchervault/commit/d9f495d0d85c041fe12242ee1e322fcb671bc17e))
+* implement Lovelace resource registration and unregistration ([6c28706](https://github.com/eladnahum5/ha-vouchervault/commit/6c28706814915ec90adc85a461a17db836d2b052))
+
+
+### Bug Fixes
+
+* apply suggestions from code review ([07861f7](https://github.com/eladnahum5/ha-vouchervault/commit/07861f7982925028466c503d11a86faf6c8ce079))
+* enhance resource unregistration by searching for resource ID by URL ([245865c](https://github.com/eladnahum5/ha-vouchervault/commit/245865c1f90a365df88f2c16640c953034729c0d))
+* fixed failed tests ([dce8fc8](https://github.com/eladnahum5/ha-vouchervault/commit/dce8fc838a66da5c61f0e79499d6eee59a886b96))
+
 ## [0.2.2](https://github.com/eladnahum5/ha-vouchervault/compare/v0.2.1...v0.2.2) (2026-03-23)
 
 
