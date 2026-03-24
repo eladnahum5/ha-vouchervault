@@ -6,7 +6,10 @@ import logging
 from pathlib import Path
 
 from homeassistant.components.http import StaticPathConfig
-from homeassistant.components.lovelace.const import CONF_RESOURCE_TYPE_WS, LOVELACE_DATA
+from homeassistant.components.lovelace.const import (
+    CONF_RESOURCE_TYPE_WS,
+    DOMAIN as LOVELACE_DOMAIN,
+)
 from homeassistant.components.lovelace.resources import ResourceStorageCollection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL, Platform
@@ -28,7 +31,7 @@ async def _async_register_lovelace_resource(
     hass: HomeAssistant, entry_id: str
 ) -> None:
     """Register the Lovelace card JS module if not already present."""
-    resource_collection = hass.data[LOVELACE_DATA].resources
+    resource_collection = hass.data[LOVELACE_DOMAIN]["resources"]
     if not isinstance(resource_collection, ResourceStorageCollection):
         _LOGGER.debug(
             "Lovelace is in YAML mode; skipping automatic card resource registration"
@@ -59,7 +62,7 @@ async def _async_unregister_lovelace_resource(
     if resource_id is None:
         return
 
-    resource_collection = hass.data[LOVELACE_DATA].resources
+    resource_collection = hass.data[LOVELACE_DOMAIN]["resources"]
     if not isinstance(resource_collection, ResourceStorageCollection):
         return
 
