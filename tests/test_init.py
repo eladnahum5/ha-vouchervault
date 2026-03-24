@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 
+from custom_components.vouchervault import _async_register_lovelace_resource
 from custom_components.vouchervault.const import DOMAIN
 
 pytestmark = pytest.mark.usefixtures("enable_custom_integrations")
@@ -166,3 +167,24 @@ async def test_lovelace_resource_unregistered_on_unload(
     await hass.async_block_till_done()
 
     mock_lovelace_resources.async_delete_item.assert_called_once_with("test-resource-id")
+
+
+@pytest.mark.usefixtures("mock_vouchervault_client")
+async def test_lovelace_resource_registered_with_lovelace_data_object(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lovelace_resources: AsyncMock,
+) -> None:
+    """Test Lovelace resource registration works with object-style Lovelace data."""
+
+    class MockLovelaceData:
+        def __init__(self, resources: AsyncMock) -> None:
+            self.resources = resources
+
+    hass.data[LOVELACE_DOMAIN] = MockLovelaceData(mock_lovelace_resources)
+
+    await _async_register_lovelace_resource(hass, mock_config_entry.entry_id)
+
+    mock_lovelace_resources.async_create_item.assert_called_once_with(
+        {CONF_RESOURCE_TYPE_WS: "module", CONF_URL: "/vouchervault/vouchervault-card.js"}
+    )

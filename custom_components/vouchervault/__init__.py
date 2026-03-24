@@ -10,7 +10,6 @@ from homeassistant.components.lovelace.const import (
     CONF_RESOURCE_TYPE_WS,
     DOMAIN as LOVELACE_DOMAIN,
 )
-from homeassistant.components.lovelace.resources import ResourceStorageCollection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -27,19 +26,49 @@ _STATIC_PATH_REGISTERED = f"{DOMAIN}_static_path_registered"
 type VoucherVaultConfigEntry = ConfigEntry[VoucherVaultCoordinator]
 
 
+def _get_lovelace_resource_collection(hass: HomeAssistant) -> object | None:
+    """Return the Lovelace resource collection for both storage styles."""
+    lovelace_data = hass.data.get(LOVELACE_DOMAIN)
+    if isinstance(lovelace_data, dict):
+        return lovelace_data.get("resources")
+    return getattr(lovelace_data, "resources", None)
+
+
+def _is_resource_registration_collection(resource_collection: object | None) -> bool:
+    """Check if object supports Lovelace resource registration operations."""
+    if resource_collection is None:
+        return False
+
+    return all(
+        hasattr(resource_collection, attr)
+        for attr in ("async_items", "async_create_item")
+    )
+
+
+def _is_resource_unregistration_collection(resource_collection: object | None) -> bool:
+    """Check if object supports Lovelace resource unregistration operations."""
+    return _is_resource_registration_collection(resource_collection) and hasattr(
+        resource_collection, "async_delete_item"
+    )
+
+
 async def _async_register_lovelace_resource(
     hass: HomeAssistant, entry_id: str
 ) -> None:
     """Register the Lovelace card JS module if not already present."""
-    resource_collection = hass.data[LOVELACE_DOMAIN]["resources"]
-    if not isinstance(resource_collection, ResourceStorageCollection):
+    resource_collection = _get_lovelace_resource_collection(hass)
+    if not _is_resource_registration_collection(resource_collection):
         _LOGGER.debug(
             "Lovelace is in YAML mode; skipping automatic card resource registration"
         )
         return
 
-    # Ensure the collection is loaded before inspecting items.
-    if not resource_collection.loaded:
+    # Ensure the collection is loaded before inspecting items when supported.
+    if (
+        hasattr(resource_collection, "loaded")
+        and not resource_collection.loaded
+        and hasattr(resource_collection, "async_get_info")
+    ):
         await resource_collection.async_get_info()
 
     for item in resource_collection.async_items():
@@ -62,8 +91,8 @@ async def _async_unregister_lovelace_resource(
     if resource_id is None:
         return
 
-    resource_collection = hass.data[LOVELACE_DOMAIN]["resources"]
-    if not isinstance(resource_collection, ResourceStorageCollection):
+    resource_collection = _get_lovelace_resource_collection(hass)
+    if not _is_resource_unregistration_collection(resource_collection):
         return
 
     try:
