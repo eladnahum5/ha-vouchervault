@@ -55,15 +55,9 @@ In entity IDs, dots in the host are replaced by underscores. For example, host `
 
 ## Dashboard card
 
-This integration ships with a companion Lovelace card. After installation, add it as a resource once:
+This integration ships with a companion Lovelace card. The card resource is registered automatically when the integration is set up — no manual steps required.
 
-1. Go to **Settings → Dashboards → Resources** (three-dot menu, top right)
-2. Click **Add resource**
-3. Enter URL: `/vouchervault/vouchervault-card.js`
-4. Select type: **JavaScript module**
-5. Click **Create**
-
-Then add the card to any dashboard using the card type `custom:vouchervault-card`.
+Add the card to any dashboard using the card type `custom:vouchervault-card`.
 
 ### Card configuration
 
@@ -96,7 +90,6 @@ Toggle the active/inactive status of a voucher item.
 
 ## Roadmap
 
-- [ ] Auto-register the Lovelace card resource on setup (no manual resource step)
 - [ ] Configurable polling interval
 - [ ] Filter vouchers via card YAML (stage 1), then via UI (stage 2, may ship separately)
 - [ ] Sort vouchers via card YAML (stage 1), then via UI (stage 2, may ship separately)
