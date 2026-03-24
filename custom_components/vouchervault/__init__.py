@@ -6,8 +6,12 @@ import logging
 from pathlib import Path
 
 from homeassistant.components.http import StaticPathConfig
+from homeassistant.components.lovelace.const import (
+    CONF_RESOURCE_TYPE_WS,
+    DOMAIN as LOVELACE_DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_URL, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from .const import DOMAIN
@@ -16,8 +20,99 @@ from .coordinator import VoucherVaultCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
+_CARD_URL = "/vouchervault/vouchervault-card.js"
+_STATIC_PATH_REGISTERED = f"{DOMAIN}_static_path_registered"
 
 type VoucherVaultConfigEntry = ConfigEntry[VoucherVaultCoordinator]
+
+
+def _get_lovelace_resource_collection(hass: HomeAssistant) -> object | None:
+    """Return the Lovelace resource collection for both storage styles."""
+    lovelace_data = hass.data.get(LOVELACE_DOMAIN)
+    if isinstance(lovelace_data, dict):
+        return lovelace_data.get("resources")
+    return getattr(lovelace_data, "resources", None)
+
+
+def _is_resource_registration_collection(resource_collection: object | None) -> bool:
+    """Check if object supports Lovelace resource registration operations."""
+    if resource_collection is None:
+        return False
+
+    return all(
+        hasattr(resource_collection, attr)
+        for attr in ("async_items", "async_create_item")
+    )
+
+
+def _is_resource_unregistration_collection(resource_collection: object | None) -> bool:
+    """Check if object supports Lovelace resource unregistration operations."""
+    return _is_resource_registration_collection(resource_collection) and hasattr(
+        resource_collection, "async_delete_item"
+    )
+
+
+async def _async_register_lovelace_resource(
+    hass: HomeAssistant, entry_id: str
+) -> None:
+    """Register the Lovelace card JS module if not already present."""
+    resource_collection = _get_lovelace_resource_collection(hass)
+    if not _is_resource_registration_collection(resource_collection):
+        _LOGGER.debug(
+            "Lovelace is in YAML mode; skipping automatic card resource registration"
+        )
+        return
+
+    # Ensure the collection is loaded before inspecting items when supported.
+    if (
+        hasattr(resource_collection, "loaded")
+        and not resource_collection.loaded
+        and hasattr(resource_collection, "async_get_info")
+    ):
+        await resource_collection.async_get_info()
+
+    for item in resource_collection.async_items():
+        if item.get(CONF_URL) == _CARD_URL:
+            _LOGGER.debug("Lovelace card resource already registered")
+            return
+
+    item = await resource_collection.async_create_item(
+        {CONF_RESOURCE_TYPE_WS: "module", CONF_URL: _CARD_URL}
+    )
+    hass.data.setdefault(DOMAIN, {})[entry_id] = item["id"]
+    _LOGGER.debug("Registered Lovelace card resource: %s", _CARD_URL)
+
+
+async def _async_unregister_lovelace_resource(
+    hass: HomeAssistant, entry_id: str
+) -> None:
+    """Remove the Lovelace card resource that was registered on setup."""
+    resource_id: str | None = hass.data.get(DOMAIN, {}).pop(entry_id, None)
+
+    resource_collection = _get_lovelace_resource_collection(hass)
+    if not _is_resource_unregistration_collection(resource_collection):
+        return
+
+    # If resource ID is not found, search for it by URL
+    if resource_id is None:
+        for item in resource_collection.async_items():
+            if item.get(CONF_URL) == _CARD_URL:
+                resource_id = item["id"]
+                break
+
+    if resource_id is None:
+        return
+
+    try:
+        await resource_collection.async_delete_item(resource_id)
+        _LOGGER.debug("Removed Lovelace card resource: %s", _CARD_URL)
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.debug(
+            "Could not remove Lovelace card resource %s: %s",
+            resource_id,
+            err,
+            exc_info=True,
+        )
 
 
 async def async_setup_entry(
@@ -42,15 +137,21 @@ async def async_setup_entry(
         DOMAIN, "toggle_item_status", handle_toggle_item_status
     )
 
-    await hass.http.async_register_static_paths(
-        [
-            StaticPathConfig(
-                "/vouchervault/vouchervault-card.js",
-                str(Path(__file__).parent / "frontend" / "vouchervault-card.js"),
-                cache_headers=False,
-            )
-        ]
-    )
+    if not hass.data.get(_STATIC_PATH_REGISTERED):
+        await hass.http.async_register_static_paths(
+            [
+                StaticPathConfig(
+                    _CARD_URL,
+                    str(
+                        Path(__file__).parent / "frontend" / "vouchervault-card.js"
+                    ),
+                    cache_headers=False,
+                )
+            ]
+        )
+        hass.data[_STATIC_PATH_REGISTERED] = True
+
+    await _async_register_lovelace_resource(hass, entry.entry_id)
 
     return True
 
@@ -59,5 +160,10 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: VoucherVaultConfigEntry
 ) -> bool:
     """Unload a config entry."""
+    unloaded = await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    if not unloaded:
+        return False
+
+    await _async_unregister_lovelace_resource(hass, entry.entry_id)
     hass.services.async_remove(DOMAIN, "toggle_item_status")
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    return True

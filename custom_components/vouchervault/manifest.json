@@ -6,8 +6,9 @@
   ],
   "config_flow": true,
   "dependencies": [
+    "frontend",
     "http",
-    "frontend"
+    "lovelace"
   ],
   "documentation": "https://github.com/eladnahum5/ha-vouchervault",
   "integration_type": "service",

@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from homeassistant.components.lovelace.const import DOMAIN as LOVELACE_DOMAIN
+from homeassistant.components.lovelace.resources import ResourceStorageCollection
 from homeassistant.const import (
     CONF_API_TOKEN,
     CONF_HOST,
@@ -36,6 +38,23 @@ def mock_register_static_paths() -> Generator[None]:
         new=AsyncMock(),
     ):
         yield
+
+
+@pytest.fixture(autouse=True)
+def mock_lovelace_resources(hass: HomeAssistant) -> AsyncMock:
+    """Populate hass.data with a mock Lovelace ResourceStorageCollection.
+
+    This prevents KeyError in _async_register_lovelace_resource and lets the
+    default storage-mode code path run during all tests.
+    """
+    mock_resources = AsyncMock(spec=ResourceStorageCollection)
+    mock_resources.loaded = False
+    mock_resources.async_items.return_value = []
+    mock_resources.async_create_item.return_value = {"id": "test-resource-id"}
+
+    hass.data[LOVELACE_DOMAIN] = {"resources": mock_resources}
+
+    return mock_resources
 
 MOCK_CONFIG = {
     CONF_HOST: "192.168.1.100",
