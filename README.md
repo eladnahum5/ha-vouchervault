@@ -93,6 +93,12 @@ fields_to_show:
 | `barcodePadding` | No | `20` | Padding (in pixels) around rendered barcodes |
 | `fields_to_show` | No | `["name", "issuer", "value", "expiry_date"]` | List of item fields to display on each voucher card |
 
+### Barcode blur
+
+Barcodes are blurred by default to prevent accidental exposure. **Tap or click any barcode to toggle the blur on and off.**
+
+The blur resets when the card rebuilds its content (i.e. when the underlying sensor data changes).
+
 ## Services
 
 ### `vouchervault.toggle_item_status`
