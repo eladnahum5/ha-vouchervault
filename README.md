@@ -56,6 +56,8 @@ In entity IDs, dots in the host are replaced by underscores. For example, host `
 
 ## Dashboard card
 
+<img src="images/home_assistant_companion_app_screenshot.jfif" alt="VoucherVault card in the Home Assistant companion app" width="300">
+
 This integration ships with a companion Lovelace card. When Lovelace is in **storage mode** (the default), the card resource is registered automatically when the integration is set up — no manual steps required.
 
 When Lovelace is in **YAML mode**, automatic registration is skipped. Add the resource manually to your `configuration.yaml`:
@@ -69,6 +71,8 @@ lovelace:
 ```
 
 Add the card to any dashboard using the card type `custom:vouchervault-card`.
+
+> **Tip:** Because the card renders all your vouchers automatically, it can take up a lot of space. It is recommended to use it either as a [Bubble Card](https://github.com/Clooos/Bubble-Card) popup or on a dedicated dashboard rather than embedding it inline on your main dashboard.
 
 ### Card configuration
 
@@ -88,6 +92,12 @@ fields_to_show:
 | `entity` | Yes | — | The `item_details` sensor entity ID |
 | `barcodePadding` | No | `20` | Padding (in pixels) around rendered barcodes |
 | `fields_to_show` | No | `["name", "issuer", "value", "expiry_date"]` | List of item fields to display on each voucher card |
+
+### Barcode blur
+
+Barcodes are blurred by default to prevent accidental exposure. **Tap or click any barcode to toggle the blur on and off.**
+
+The blur resets when the card rebuilds its content (i.e. when the underlying sensor data changes).
 
 ## Services
 
