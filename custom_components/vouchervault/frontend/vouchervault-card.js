@@ -126,7 +126,13 @@ class VoucherVaultCard extends HTMLElement {
                         paddingwidth: padding,
                         paddingheight: padding,
                     });
-                canvas.style.width = '100%';
+                // Adjust canvas size to fit the card width while maintaining aspect ratio.
+                // Some code types (e.g. QR) are more square, so only set width to 50% for those.
+                if (['qrcode', 'datamatrix', 'azteccode'].includes(canvas.dataset.codeType)) {
+                    canvas.style.width = '50%';
+                } else {
+                    canvas.style.width = '100%';
+                }
                 canvas.style.height = 'auto';
             } catch (e) {
                 canvas.parentElement.insertAdjacentHTML(
@@ -177,7 +183,7 @@ class VoucherVaultCard extends HTMLElement {
         // Initialize card structure on first render
         if (!this.content) {
             this.innerHTML = `
-                <ha-card header="Voucher Vault">
+                <ha-card header="VoucherVault">
                     <div class="card-content">
                         <p>Loading...</p>
                     </div>
