@@ -15,5 +15,5 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/eladnahum5/ha-vouchervault/issues",
   "single_config_entry": true,
-  "version": "1.0.1"
+  "version": "1.0.2"
 }

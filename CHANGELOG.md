@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.2](https://github.com/eladnahum5/ha-vouchervault/compare/v1.0.1...v1.0.2) (2026-03-25)
+
+
+### Bug Fixes
+
+* adjust canvas size for QR code types and update card header ([e9cd7fd](https://github.com/eladnahum5/ha-vouchervault/commit/e9cd7fdc0c325ae807fb1fcbf1b0f6d4af5643bd))
+* remove unnecessary line break in barcode HTML generation ([0901cab](https://github.com/eladnahum5/ha-vouchervault/commit/0901cab92ef5538c6a834ddbfeee5b17c4036363))
+
 ## [1.0.1](https://github.com/eladnahum5/ha-vouchervault/compare/v1.0.0...v1.0.1) (2026-03-24)
 
 
