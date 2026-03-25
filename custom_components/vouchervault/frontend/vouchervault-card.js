@@ -173,7 +173,7 @@ class VoucherVaultCard extends HTMLElement {
                 <div class="voucher-item">
                     ${fieldsHtml}
                     <mark-as-used-button item_id="${escHtml(item.id)}" entity="${escHtml(entityId)}"></mark-as-used-button><br><br>
-                    ${this.generateBarcodeHtml(item.redeem_code, item.code_type)}<br>
+                    ${this.generateBarcodeHtml(item.redeem_code, item.code_type)}
                 </div>
             `;
     }
