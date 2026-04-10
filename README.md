@@ -100,6 +100,10 @@ Barcodes are blurred by default to prevent accidental exposure. **Tap or click a
 
 The blur resets when the card rebuilds its content (i.e. when the underlying sensor data changes).
 
+### Card language
+
+Fixed labels on the card (for example field names, buttons, and empty states) follow your Home Assistant user language. Bundled locales are **English**, **German**, **Spanish**, **French**, and **Hebrew** (`en`, `de`, `es`, `fr`, `he`). If your language is not translated yet, the card falls back to English.
+
 ## Services
 
 ### `vouchervault.toggle_item_status`
