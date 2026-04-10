@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est déjà configuré"
+        },
+        "error": {
+            "cannot_connect": "Échec de la connexion",
+            "invalid_auth": "Authentification invalide",
+            "invalid_polling_interval": "L'intervalle d'interrogation doit être supérieur à 0 minute",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_token": "Jeton d'API",
+                    "host": "Hôte",
+                    "password": "Mot de passe",
+                    "port": "Port",
+                    "username": "Nom d'utilisateur",
+                    "polling_interval_minutes": "Intervalle d'interrogation (minutes)"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "items": {
+                "name": "Articles"
+            },
+            "users": {
+                "name": "Utilisateurs"
+            },
+            "issuers": {
+                "name": "Émetteurs"
+            },
+            "item_details": {
+                "name": "Détails des articles"
+            }
+        }
+    },
+    "services": {
+        "toggle_item_status": {
+            "name": "Basculer l'état de l'article",
+            "description": "Bascule l'état utilisé ou disponible d'un article VoucherVault (par exemple utiliser ou annuler l'utilisation d'un bon, d'une carte-cadeau ou d'un coupon).",
+            "fields": {
+                "item_id": {
+                    "name": "ID de l'article",
+                    "description": "L'identifiant de l'article à basculer."
+                }
+            }
+        }
+    }
+}

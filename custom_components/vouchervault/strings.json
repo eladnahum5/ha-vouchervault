@@ -1,4 +1,32 @@
 {
+  "entity": {
+    "sensor": {
+      "items": {
+        "name": "Items"
+      },
+      "users": {
+        "name": "Users"
+      },
+      "issuers": {
+        "name": "Issuers"
+      },
+      "item_details": {
+        "name": "Item details"
+      }
+    }
+  },
+  "services": {
+    "toggle_item_status": {
+      "name": "Toggle item status",
+      "description": "Toggles the used or available status of a VoucherVault item (for example redeem or un-redeem a voucher, gift card, or coupon).",
+      "fields": {
+        "item_id": {
+          "name": "Item ID",
+          "description": "The ID of the item to toggle."
+        }
+      }
+    }
+  },
   "config": {
     "step": {
       "user": {
@@ -8,14 +36,14 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "api_token": "[%key:common::config_flow::data::api_token%]",
-          "polling_interval_minutes": "[%key:common::config_flow::data::polling_interval_minutes%]"
+          "polling_interval_minutes": "Polling interval (minutes)"
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_polling_interval": "[%key:common::config_flow::error::invalid_polling_interval%]",
+      "invalid_polling_interval": "Polling interval must be greater than 0 minutes",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {

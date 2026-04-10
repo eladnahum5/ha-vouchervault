@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Gerät ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ungültige Authentifizierung",
+            "invalid_polling_interval": "Das Abrufintervall muss größer als 0 Minuten sein",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_token": "API-Token",
+                    "host": "Host",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "username": "Benutzername",
+                    "polling_interval_minutes": "Abrufintervall (Minuten)"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "items": {
+                "name": "Artikel"
+            },
+            "users": {
+                "name": "Benutzer"
+            },
+            "issuers": {
+                "name": "Herausgeber"
+            },
+            "item_details": {
+                "name": "Artikeldetails"
+            }
+        }
+    },
+    "services": {
+        "toggle_item_status": {
+            "name": "Artikelstatus umschalten",
+            "description": "Schaltet den Status „verwendet“ oder „verfügbar“ eines VoucherVault-Artikels um (zum Beispiel Einlösen oder Zurücknehmen eines Gutscheins, Geschenkgutscheins oder Coupons).",
+            "fields": {
+                "item_id": {
+                    "name": "Artikel-ID",
+                    "description": "Die ID des umzuschaltenden Artikels."
+                }
+            }
+        }
+    }
+}

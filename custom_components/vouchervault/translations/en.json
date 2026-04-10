@@ -17,7 +17,35 @@
                     "password": "Password",
                     "port": "Port",
                     "username": "Username",
-                    "polling_interval_minutes": "Polling Interval (minutes)"
+                    "polling_interval_minutes": "Polling interval (minutes)"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "items": {
+                "name": "Items"
+            },
+            "users": {
+                "name": "Users"
+            },
+            "issuers": {
+                "name": "Issuers"
+            },
+            "item_details": {
+                "name": "Item details"
+            }
+        }
+    },
+    "services": {
+        "toggle_item_status": {
+            "name": "Toggle item status",
+            "description": "Toggles the used or available status of a VoucherVault item (for example redeem or un-redeem a voucher, gift card, or coupon).",
+            "fields": {
+                "item_id": {
+                    "name": "Item ID",
+                    "description": "The ID of the item to toggle."
                 }
             }
         }

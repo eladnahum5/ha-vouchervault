@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "המכשיר כבר מוגדר"
+        },
+        "error": {
+            "cannot_connect": "החיבור נכשל",
+            "invalid_auth": "אימות לא חוקי",
+            "invalid_polling_interval": "מרווח העדכון חייב להיות גדול מ-0 דקות",
+            "unknown": "שגיאה לא צפויה"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_token": "אסימון API",
+                    "host": "מארח",
+                    "password": "סיסמה",
+                    "port": "פורט",
+                    "username": "שם משתמש",
+                    "polling_interval_minutes": "מרווח עדכון (דקות)"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "items": {
+                "name": "פריטים"
+            },
+            "users": {
+                "name": "משתמשים"
+            },
+            "issuers": {
+                "name": "מנפיקים"
+            },
+            "item_details": {
+                "name": "פרטי פריטים"
+            }
+        }
+    },
+    "services": {
+        "toggle_item_status": {
+            "name": "החלפת מצב פריט",
+            "description": "מחליף בין מצב בשימוש לזמין עבור פריט ב-VoucherVault (למשל מימוש או ביטול מימוש של שובר, כרטיס מתנה או קופון).",
+            "fields": {
+                "item_id": {
+                    "name": "מזהה פריט",
+                    "description": "מזהה הפריט להחלפה."
+                }
+            }
+        }
+    }
+}
