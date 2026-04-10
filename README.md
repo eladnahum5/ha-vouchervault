@@ -115,4 +115,4 @@ Toggle the active/inactive status of a voucher item.
 - [ ] Filter vouchers via card YAML (stage 1), then via UI (stage 2, may ship separately)
 - [ ] Sort vouchers via card YAML (stage 1), then via UI (stage 2, may ship separately)
 - [ ] Translations for popular languages
-- [ ] Submit to the default HACS store
+- [ ] Add support for reconfiguration of polling interval
