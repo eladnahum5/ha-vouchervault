@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.0](https://github.com/eladnahum5/ha-vouchervault/compare/v1.0.2...v1.1.0) (2026-04-10)
+
+
+### Features
+
+* add localization support for VoucherVault card with translations in multiple languages ([41bde4b](https://github.com/eladnahum5/ha-vouchervault/commit/41bde4b0ce3a30dddcbedb4796760bbca96a3bec))
+* configureable polling interval ([7c22aeb](https://github.com/eladnahum5/ha-vouchervault/commit/7c22aeb6522341737d3a0df40da388032b678777))
+* translations for de, es, fr, and he ([1d332ac](https://github.com/eladnahum5/ha-vouchervault/commit/1d332ac4d2bd58fb9bdfb26314658e3001eb5286))
+
+
+### Bug Fixes
+
+* added validation and migration for configurable polling interval ([65c6040](https://github.com/eladnahum5/ha-vouchervault/commit/65c6040696cab67b6594d4b14245307e59c5e4f9))
+
 ## [1.0.2](https://github.com/eladnahum5/ha-vouchervault/compare/v1.0.1...v1.0.2) (2026-03-25)
 
 
