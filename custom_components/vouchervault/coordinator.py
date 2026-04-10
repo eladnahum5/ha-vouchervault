@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, UPDATE_INTERVAL_MINUTES
+from .const import DOMAIN, POLLING_INTERVAL_MINUTES_KEY, UPDATE_INTERVAL_MINUTES_DEFAULT
 from .vouchervault import ApiData, VoucherVaultApiClient
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +26,11 @@ class VoucherVaultCoordinator(DataUpdateCoordinator[ApiData]):
             _LOGGER,
             name=DOMAIN,
             config_entry=config_entry,
-            update_interval=timedelta(minutes=config_entry.data["polling_interval"]),
+            update_interval=timedelta(
+                minutes=config_entry.data.get(
+                    POLLING_INTERVAL_MINUTES_KEY, UPDATE_INTERVAL_MINUTES_DEFAULT
+                )
+            ),
         )
 
         self.client = VoucherVaultApiClient(

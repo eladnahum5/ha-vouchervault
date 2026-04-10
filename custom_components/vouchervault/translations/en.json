@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
+            "invalid_polling_interval": "Polling interval must be greater than 0 minutes",
             "unknown": "Unexpected error"
         },
         "step": {
@@ -16,7 +17,7 @@
                     "password": "Password",
                     "port": "Port",
                     "username": "Username",
-                    "polling_interval": "Polling Interval (minutes)"
+                    "polling_interval_minutes": "Polling Interval (minutes)"
                 }
             }
         }

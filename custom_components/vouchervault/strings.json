@@ -8,13 +8,14 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "api_token": "[%key:common::config_flow::data::api_token%]",
-          "polling_interval": "[%key:common::config_flow::data::polling_interval%]"
+          "polling_interval_minutes": "[%key:common::config_flow::data::polling_interval_minutes%]"
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_polling_interval": "[%key:common::config_flow::error::invalid_polling_interval%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
