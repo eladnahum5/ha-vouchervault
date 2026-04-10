@@ -10,17 +10,25 @@ jobs:
     permissions:
       issues: write
     steps:
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v8
         with:
           script: |
+            // Issue forms do not put HTML comments into the issue body; detect
+            // by section headings GitHub adds from our form field labels.
             const body = context.payload.issue.body ?? "";
             let label;
-            if (body.includes("<!-- vv-form:bug -->")) {
+            if (
+              body.includes("### What went wrong?") &&
+              body.includes("### Steps to reproduce")
+            ) {
               label = "bug";
-            } else if (body.includes("<!-- vv-form:feature -->")) {
+            } else if (
+              body.includes("### Problem or goal") &&
+              body.includes("### Proposed change")
+            ) {
               label = "feature";
             } else {
-              core.info("No recognized issue form marker; skipping");
+              core.info("No recognized issue form sections; skipping");
               return;
             }
             const { owner, repo } = context.repo;
