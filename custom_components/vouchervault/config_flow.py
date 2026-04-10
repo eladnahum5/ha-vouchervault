@@ -8,7 +8,7 @@ from typing import Any
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_TOKEN,
     CONF_HOST,
@@ -19,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
+from .const import DOMAIN, POLLING_INTERVAL_MINUTES_KEY, UPDATE_INTERVAL_MINUTES_DEFAULT
 from .vouchervault import VoucherVaultApiClient
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,6 +31,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_USERNAME, default="admin"): str,
         vol.Required(CONF_PASSWORD): str,
         vol.Required(CONF_API_TOKEN): str,
+        vol.Required(
+            POLLING_INTERVAL_MINUTES_KEY, default=UPDATE_INTERVAL_MINUTES_DEFAULT
+        ): int,
     }
 )
 
@@ -40,6 +43,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
+    if data[POLLING_INTERVAL_MINUTES_KEY] < 1:
+        raise InvalidPollingInterval("Polling interval must be greater than 0 minutes")
+
     client = VoucherVaultApiClient(
         host=data[CONF_HOST],
         port=data[CONF_PORT],
@@ -73,7 +79,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 class ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for VoucherVault."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -87,6 +93,8 @@ class ConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+            except InvalidPollingInterval:
+                errors["base"] = "invalid_polling_interval"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -97,6 +105,24 @@ class ConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
+    async def async_migrate_entry(
+        self, hass: HomeAssistant, entry: ConfigEntry
+    ) -> bool:
+        """Migrate old entry."""
+        _LOGGER.debug("Migrating from version %s", entry.version)
+        if entry.version > 1:
+            # This means the user has downgraded from a future version
+            return False
+
+        if entry.version == 1:
+            # config polling interval
+            new_data = {**entry.data}
+            new_data[POLLING_INTERVAL_MINUTES_KEY] = UPDATE_INTERVAL_MINUTES_DEFAULT
+
+        hass.config_entries.async_update_entry(entry, data=new_data, version=2)
+        _LOGGER.debug("Migration to configuration version %s successful", entry.version)
+        return True
+
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
@@ -104,3 +130,7 @@ class CannotConnect(HomeAssistantError):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class InvalidPollingInterval(HomeAssistantError):
+    """Error to indicate the polling interval is invalid."""
