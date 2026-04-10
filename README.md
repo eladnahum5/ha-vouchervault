@@ -40,10 +40,11 @@ After installation, go to **Settings → Devices & Services → Add Integration*
 | `Username` | Your VoucherVault username (defaults to `admin`) |
 | `Password` | Your VoucherVault password |
 | `API token` | API token from your VoucherVault account settings |
+| `Polling interval (minutes)` | How often sensors refresh from the API (defaults to `30`, must be at least `1`; matches the interval suggested in the VoucherVault Home Assistant REST sensor docs) |
 
 ## Sensors
 
-The integration creates four sensor entities, all updated every 30 minutes (as recommended in the Home Assistant REST sensor section of the VoucherVault docs):
+The integration creates four sensor entities. They share one update schedule, set by **Polling interval (minutes)** when you add the integration (default `30`, as recommended in the Home Assistant REST sensor section of the VoucherVault docs). Entries from older releases are migrated to version 2 with the default interval; to use a different interval, remove the integration and add it again with the desired value.
 
 | Entity | State | Attributes |
 |--------|-------|------------|
@@ -111,7 +112,6 @@ Toggle the active/inactive status of a voucher item.
 
 ## Roadmap
 
-- [ ] Configurable polling interval
 - [ ] Filter vouchers via card YAML (stage 1), then via UI (stage 2, may ship separately)
 - [ ] Sort vouchers via card YAML (stage 1), then via UI (stage 2, may ship separately)
 - [ ] Translations for popular languages
