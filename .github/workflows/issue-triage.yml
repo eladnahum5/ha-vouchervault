@@ -1,0 +1,68 @@
+name: Issue triage
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  label-and-assign:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.issue.body ?? "";
+            let label;
+            if (body.includes("<!-- vv-form:bug -->")) {
+              label = "bug";
+            } else if (body.includes("<!-- vv-form:feature -->")) {
+              label = "feature";
+            } else {
+              core.info("No recognized issue form marker; skipping");
+              return;
+            }
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.issue.number;
+            const assignee = owner;
+
+            async function ensureLabel(name, color, description) {
+              try {
+                await github.rest.issues.getLabel({ owner, repo, name });
+              } catch (err) {
+                if (err.status !== 404) {
+                  throw err;
+                }
+                await github.rest.issues.createLabel({
+                  owner,
+                  repo,
+                  name,
+                  color,
+                  description,
+                });
+              }
+            }
+
+            if (label === "bug") {
+              await ensureLabel("bug", "d73a4a", "Something is not working");
+            } else {
+              await ensureLabel(
+                "feature",
+                "a2eeef",
+                "New feature or improvement",
+              );
+            }
+
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number,
+              labels: [label],
+            });
+            await github.rest.issues.addAssignees({
+              owner,
+              repo,
+              issue_number,
+              assignees: [assignee],
+            });

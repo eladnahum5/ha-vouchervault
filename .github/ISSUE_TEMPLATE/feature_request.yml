@@ -1,0 +1,21 @@
+name: Feature request
+description: Suggest an improvement or new capability
+body:
+  - type: markdown
+    attributes:
+      value: |
+        <!-- vv-form:feature -->
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or goal
+      description: What you are trying to do, or what is missing today
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: How you think it should work or what should be added
+    validations:
+      required: true
