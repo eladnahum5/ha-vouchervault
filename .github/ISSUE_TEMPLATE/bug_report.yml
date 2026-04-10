@@ -15,8 +15,10 @@ body:
   - type: input
     id: ha_vv_version
     attributes:
-      label: VoucherVault (ha-vv) version
-      description: Integration version from manifest or HACS
+      label: VoucherVault integration version
+      description: >
+        This Home Assistant custom integration (manifest or HACS), not the
+        official VoucherVault product
     validations:
       required: true
   - type: textarea
