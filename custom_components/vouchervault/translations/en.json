@@ -15,7 +15,8 @@
                     "host": "Host",
                     "password": "Password",
                     "port": "Port",
-                    "username": "Username"
+                    "username": "Username",
+                    "polling_interval": "Polling Interval (minutes)"
                 }
             }
         }

@@ -26,7 +26,7 @@ class VoucherVaultCoordinator(DataUpdateCoordinator[ApiData]):
             _LOGGER,
             name=DOMAIN,
             config_entry=config_entry,
-            update_interval=timedelta(minutes=UPDATE_INTERVAL_MINUTES),
+            update_interval=timedelta(minutes=config_entry.data["polling_interval"]),
         )
 
         self.client = VoucherVaultApiClient(

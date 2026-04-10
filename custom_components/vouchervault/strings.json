@@ -7,7 +7,8 @@
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "api_token": "[%key:common::config_flow::data::api_token%]"
+          "api_token": "[%key:common::config_flow::data::api_token%]",
+          "polling_interval": "[%key:common::config_flow::data::polling_interval%]"
         }
       }
     },

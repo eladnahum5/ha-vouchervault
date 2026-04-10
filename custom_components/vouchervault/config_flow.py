@@ -31,6 +31,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_USERNAME, default="admin"): str,
         vol.Required(CONF_PASSWORD): str,
         vol.Required(CONF_API_TOKEN): str,
+        vol.Required("polling_interval", default=30): int,
     }
 )
 
