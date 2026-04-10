@@ -49,5 +49,31 @@
                 }
             }
         }
+    },
+    "card": {
+        "title": "VoucherVault",
+        "loading": "Wird geladen …",
+        "entity_not_found": "Entität nicht gefunden",
+        "no_items_yet": "Noch keine Artikeldaten.",
+        "field_not_found": "Feld nicht gefunden",
+        "refresh_items": "Artikel aktualisieren",
+        "mark_as_used": "Als verwendet markieren",
+        "barcode_error_prefix": "Barcodefehler",
+        "fields": {
+            "id": "ID",
+            "type": "Typ",
+            "name": "Name",
+            "issuer": "Herausgeber",
+            "value": "Wert",
+            "value_type": "Werttyp",
+            "issue_date": "Ausstellungsdatum",
+            "expiry_date": "Ablaufdatum",
+            "description": "Beschreibung",
+            "is_used": "Ist verwendet",
+            "user": "Benutzer",
+            "redeem_code": "Einlösecode",
+            "code_type": "Codetyp",
+            "pin": "PIN"
+        }
     }
 }

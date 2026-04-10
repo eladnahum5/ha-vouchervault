@@ -49,5 +49,31 @@
                 }
             }
         }
+    },
+    "card": {
+        "title": "VoucherVault",
+        "loading": "Chargement…",
+        "entity_not_found": "Entité introuvable",
+        "no_items_yet": "Pas encore de données d'articles.",
+        "field_not_found": "Champ introuvable",
+        "refresh_items": "Actualiser les articles",
+        "mark_as_used": "Marquer comme utilisé",
+        "barcode_error_prefix": "Erreur de code-barres",
+        "fields": {
+            "id": "ID",
+            "type": "Type",
+            "name": "Nom",
+            "issuer": "Émetteur",
+            "value": "Valeur",
+            "value_type": "Type de valeur",
+            "issue_date": "Date d'émission",
+            "expiry_date": "Date d'expiration",
+            "description": "Description",
+            "is_used": "Est-il utilisé",
+            "user": "Utilisateur",
+            "redeem_code": "Code d'utilisation",
+            "code_type": "Type de code",
+            "pin": "PIN"
+        }
     }
 }

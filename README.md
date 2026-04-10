@@ -115,4 +115,3 @@ Toggle the active/inactive status of a voucher item.
 - [ ] Filter vouchers via card YAML (stage 1), then via UI (stage 2, may ship separately)
 - [ ] Sort vouchers via card YAML (stage 1), then via UI (stage 2, may ship separately)
 - [ ] Add support for reconfiguration of polling interval
-- [ ] Add translations for VoucherVault card strings

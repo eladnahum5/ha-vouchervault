@@ -4,6 +4,9 @@ import {
     css
 } from "https://unpkg.com/lit-element@2.0.1/lit-element.js?module";
 
+/** Integration domain; must match custom_components folder name. */
+const VV_DOMAIN = "vouchervault";
+
 // Escape special HTML characters to prevent broken markup or XSS when
 // inserting untrusted strings into innerHTML.
 function escHtml(str) {
@@ -12,6 +15,24 @@ function escHtml(str) {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
+}
+
+/** @param {object} hass @param {string} subKey @param {string} fallback */
+function vvTranslateCard(hass, subKey, fallback) {
+    const key = `component.vouchervault.card.${subKey}`;
+    const out = hass.localize(key);
+    if (!out || out === key) {
+        return fallback;
+    }
+    return out;
+}
+
+/** @param {object} hass @param {string} field */
+function vvFieldLabel(hass, field) {
+    const fallback = field
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+    return vvTranslateCard(hass, `fields.${field}`, fallback);
 }
 
 const buttonStyle = css`
@@ -40,10 +61,13 @@ class VoucherRefreshButton extends LitElement {
     }
 
     render() {
+        const label = this.hass
+            ? vvTranslateCard(this.hass, 'refresh_items', 'Refresh items')
+            : 'Refresh items';
         // Arrow function ensures `this` refers to the LitElement instance, not
         // the native button element that fired the event.
         return html`
-            <button @click=${() => this._click()}>Refresh Items</button>
+            <button @click=${() => this._click()}>${label}</button>
         `;
     }
 
@@ -72,8 +96,11 @@ class VoucherMarkUsedButton extends LitElement {
     }
 
     render() {
+        const label = this.hass
+            ? vvTranslateCard(this.hass, 'mark_as_used', 'Mark as used')
+            : 'Mark as used';
         return html`
-            <button @click=${() => this._click()}>Mark as Used</button>
+            <button @click=${() => this._click()}>${label}</button>
         `;
     }
 
@@ -111,8 +138,26 @@ class VoucherVaultCard extends HTMLElement {
         return 3;
     }
 
+    _updateCardChrome(hass) {
+        const haCard = this.querySelector('ha-card');
+        if (haCard) {
+            const title = vvTranslateCard(hass, 'title', 'VoucherVault');
+            haCard.setAttribute('header', title);
+        }
+        if (this.content) {
+            const loading = this.content.querySelector('.vv-card-loading');
+            if (loading) {
+                loading.textContent = vvTranslateCard(hass, 'loading', 'Loading...');
+            }
+        }
+    }
+
     _renderBwipBarcodes() {
         const padding = this.config.barcode_padding;
+        const hass = this._hass;
+        const errPrefix = hass
+            ? vvTranslateCard(hass, 'barcode_error_prefix', 'Barcode error')
+            : 'Barcode error';
         for (const canvas of this.content.querySelectorAll('canvas[data-bwip]')) {
             try {
                 window.bwipjs.toCanvas(
@@ -137,7 +182,7 @@ class VoucherVaultCard extends HTMLElement {
             } catch (e) {
                 canvas.parentElement.insertAdjacentHTML(
                     'beforeend',
-                    `<span style="color:red;font-size:0.8em">bwip-js: ${escHtml(e.message)}</span>`
+                    `<span style="color:red;font-size:0.8em">${escHtml(errPrefix)}: ${escHtml(e.message)}</span>`
                 );
             }
         }
@@ -156,17 +201,16 @@ class VoucherVaultCard extends HTMLElement {
         `;
     }
 
-    generateItemHtml(item, entityId) {
+    generateItemHtml(hass, item, entityId) {
         // Loop through fields_to_show and only include those in the output
         let fieldsHtml = '';
         for (const field of this.config.fields_to_show) {
             if (item[field]) {
-                // Capitalise each word and replace underscores with spaces for display
-                const displayField = field.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+                const displayField = vvFieldLabel(hass, field);
                 fieldsHtml += `${escHtml(displayField)}: ${escHtml(item[field])}<br>`;
             } else {
-                // Warn in the UI if a configured field is absent from the item data
-                fieldsHtml += `<span style="color:red;font-size:0.8em">Field not found: ${escHtml(field)}</span><br>`;
+                const prefix = vvTranslateCard(hass, 'field_not_found', 'Field not found');
+                fieldsHtml += `<span style="color:red;font-size:0.8em">${escHtml(prefix)}: ${escHtml(field)}</span><br>`;
             }
         }
         return `
@@ -178,6 +222,121 @@ class VoucherVaultCard extends HTMLElement {
             `;
     }
 
+    /**
+     * Merge `card` strings from the integration into hass.resources.
+     * HA only preloads categories like entity/config; custom `card` keys are omitted
+     * until this runs, so hass.localize would otherwise fall back to English.
+     */
+    async _vvLoadCardCategoryIfNeeded(hass) {
+        const lang = hass.language || 'en';
+        if (typeof hass.loadBackendTranslation !== 'function') {
+            return;
+        }
+        if (this._vvCardCategoryLoadedForLang === lang) {
+            return;
+        }
+        if (!this._vvInflightCardLoads) {
+            this._vvInflightCardLoads = {};
+        }
+        if (this._vvInflightCardLoads[lang]) {
+            await this._vvInflightCardLoads[lang];
+            if (this._hass === hass && (hass.language || 'en') === lang) {
+                this._lastRenderCacheKey = null;
+                this._vvApplyHassContent(hass);
+            }
+            return;
+        }
+        const loadPromise = (async () => {
+            try {
+                await hass.loadBackendTranslation('card', VV_DOMAIN);
+            } catch {
+                // Keep English fallbacks from vvTranslateCard
+            }
+        })();
+        this._vvInflightCardLoads[lang] = loadPromise;
+        await loadPromise;
+        delete this._vvInflightCardLoads[lang];
+
+        if (this._hass !== hass) {
+            return;
+        }
+        if ((hass.language || 'en') !== lang) {
+            return;
+        }
+        this._vvCardCategoryLoadedForLang = lang;
+        this._lastRenderCacheKey = null;
+        this._vvApplyHassContent(hass);
+    }
+
+    /** Update card DOM from current hass (after translations are available). */
+    _vvApplyHassContent(hass) {
+        if (!this.content) {
+            return;
+        }
+        this._updateCardChrome(hass);
+
+        const entityId = this.config.entity;
+        const state = hass.states[entityId];
+        if (!state) {
+            const prefix = vvTranslateCard(hass, 'entity_not_found', 'Entity not found');
+            this.content.innerHTML = `<p>${escHtml(prefix)}: ${escHtml(entityId)}</p>`;
+            return;
+        }
+        const itemDetails = state.attributes.items;
+        if (!itemDetails) {
+            const msg = vvTranslateCard(hass, 'no_items_yet', 'No items data yet.');
+            this.content.innerHTML = `<p>${escHtml(msg)}</p>`;
+            return;
+        }
+
+        // Only rebuild the DOM when items data or UI language changes, so
+        // user-toggled blur states are not reset on every HA state update (which
+        // fires frequently on mobile and would otherwise reset the blur within
+        // seconds).
+        const itemsJson = JSON.stringify(itemDetails);
+        const lang = hass.language || 'en';
+        const renderCacheKey = `${lang}:${itemsJson}`;
+        if (this._lastRenderCacheKey !== renderCacheKey) {
+            this._lastRenderCacheKey = renderCacheKey;
+
+            const separatorHtml = `<div class="separator"><br><hr></div>`;
+            let vouchersHtml = `
+                <voucher-refresh-button entity="${escHtml(entityId)}"></voucher-refresh-button>
+                ${separatorHtml}
+            `;
+            for (const item of itemDetails) {
+                if (item.is_used) {
+                    continue; // Skip already-used vouchers
+                }
+                vouchersHtml += `
+                    ${this.generateItemHtml(hass, item, entityId)}
+                    ${separatorHtml}
+                `;
+            }
+
+            this.content.innerHTML = vouchersHtml;
+
+            // Render barcodes, or defer until bwip-js finishes loading
+            if (window.bwipjs) {
+                this._renderBwipBarcodes();
+            } else {
+                const script = document.getElementById('bwip-js-script');
+                if (script) {
+                    script.addEventListener('load', () => this._renderBwipBarcodes(), { once: true });
+                }
+            }
+        }
+
+        // Pass the hass object to LitElement sub-components so they can call services
+        const refreshButton = this.content.querySelector("voucher-refresh-button");
+        if (refreshButton) {
+            refreshButton.hass = hass;
+        }
+        for (const button of this.content.querySelectorAll("mark-as-used-button")) {
+            button.hass = hass;
+        }
+    }
+
     // Called by Home Assistant each time the state changes
     set hass(hass) {
         // Initialize card structure on first render
@@ -185,7 +344,7 @@ class VoucherVaultCard extends HTMLElement {
             this.innerHTML = `
                 <ha-card header="VoucherVault">
                     <div class="card-content">
-                        <p>Loading...</p>
+                        <p class="vv-card-loading">Loading...</p>
                     </div>
                 </ha-card>
             `;
@@ -201,59 +360,9 @@ class VoucherVaultCard extends HTMLElement {
             });
         }
 
-        const entityId = this.config.entity;
-        const state = hass.states[entityId];
-        if (!state) {
-            this.content.innerHTML = `<p>Entity not found: ${escHtml(entityId)}</p>`;
-            return;
-        }
-        const itemDetails = state.attributes.items;
-        if (!itemDetails) {
-            this.content.innerHTML = `<p>No items data yet.</p>`;
-            return;
-        }
-
-        // Only rebuild the DOM when items data actually changes, so user-toggled
-        // blur states are not reset on every HA state update (which fires frequently
-        // on mobile and would otherwise reset the blur within seconds).
-        const itemsJson = JSON.stringify(itemDetails);
-        if (this._lastItemsJson !== itemsJson) {
-            this._lastItemsJson = itemsJson;
-
-            const separatorHtml = `<div class="separator"><br><hr></div>`;
-            let vouchersHtml = `
-                <voucher-refresh-button entity="${escHtml(entityId)}">Test</voucher-refresh-button>
-                ${separatorHtml}
-            `;
-            for (const item of itemDetails) {
-                if (item.is_used) {
-                    continue; // Skip already-used vouchers
-                }
-                vouchersHtml += `
-                    ${this.generateItemHtml(item, entityId)}
-                    ${separatorHtml}
-                `;
-            }
-
-            this.content.innerHTML = vouchersHtml;
-
-            // Render barcodes, or defer until bwip-js finishes loading
-            if (window.bwipjs) {
-                this._renderBwipBarcodes();
-            } else {
-                const script = document.getElementById('bwip-js-script');
-                if (script) script.addEventListener('load', () => this._renderBwipBarcodes(), { once: true });
-            }
-        }
-
-        // Pass the hass object to LitElement sub-components so they can call services
-        const refreshButton = this.content.querySelector("voucher-refresh-button");
-        if (refreshButton) {
-            refreshButton.hass = hass;
-        }
-        for (const button of this.content.querySelectorAll("mark-as-used-button")) {
-            button.hass = hass;
-        }
+        this._hass = hass;
+        this._vvApplyHassContent(hass);
+        void this._vvLoadCardCategoryIfNeeded(hass);
     }
 }
 

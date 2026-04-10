@@ -49,5 +49,31 @@
                 }
             }
         }
+    },
+    "card": {
+        "title": "VoucherVault",
+        "loading": "Cargando…",
+        "entity_not_found": "Entidad no encontrada",
+        "no_items_yet": "Aún no hay datos de artículos.",
+        "field_not_found": "Campo no encontrado",
+        "refresh_items": "Actualizar artículos",
+        "mark_as_used": "Marcar como usado",
+        "barcode_error_prefix": "Error de código de barras",
+        "fields": {
+            "id": "ID",
+            "type": "Tipo",
+            "name": "Nombre",
+            "issuer": "Emisor",
+            "value": "Valor",
+            "value_type": "Tipo de valor",
+            "issue_date": "Fecha de emisión",
+            "expiry_date": "Fecha de caducidad",
+            "description": "Descripción",
+            "is_used": "Está usado",
+            "user": "Usuario",
+            "redeem_code": "Código de canje",
+            "code_type": "Tipo de código",
+            "pin": "PIN"
+        }
     }
 }

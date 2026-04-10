@@ -49,5 +49,31 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "card": {
+    "title": "VoucherVault",
+    "loading": "Loading...",
+    "entity_not_found": "Entity not found",
+    "no_items_yet": "No items data yet.",
+    "field_not_found": "Field not found",
+    "refresh_items": "Refresh items",
+    "mark_as_used": "Mark as used",
+    "barcode_error_prefix": "Barcode error",
+    "fields": {
+      "id": "ID",
+      "type": "Type",
+      "name": "Name",
+      "issuer": "Issuer",
+      "value": "Value",
+      "value_type": "Value type",
+      "issue_date": "Issue date",
+      "expiry_date": "Expiry date",
+      "description": "Description",
+      "is_used": "Is used",
+      "user": "User",
+      "redeem_code": "Redeem code",
+      "code_type": "Code type",
+      "pin": "PIN"
+    }
   }
 }

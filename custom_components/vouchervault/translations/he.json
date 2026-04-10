@@ -49,5 +49,31 @@
                 }
             }
         }
+    },
+    "card": {
+        "title": "VoucherVault",
+        "loading": "טוען…",
+        "entity_not_found": "ישות לא נמצאה",
+        "no_items_yet": "אין עדיין נתוני פריטים.",
+        "field_not_found": "שדה לא נמצא",
+        "refresh_items": "רענון פריטים",
+        "mark_as_used": "סמן כמשומש",
+        "barcode_error_prefix": "שגיאת ברקוד",
+        "fields": {
+            "id": "מזהה",
+            "type": "סוג",
+            "name": "שם",
+            "issuer": "מנפיק",
+            "value": "ערך",
+            "value_type": "סוג ערך",
+            "issue_date": "תאריך הנפקה",
+            "expiry_date": "תאריך תפוגה",
+            "description": "תיאור",
+            "is_used": "שומש",
+            "user": "משתמש",
+            "redeem_code": "קוד מימוש",
+            "code_type": "סוג קוד",
+            "pin": "PIN"
+        }
     }
 }
