@@ -1,0 +1,27 @@
+name: Feature request
+description: Suggest an improvement or new capability
+body:
+  - type: markdown
+    attributes:
+      value: |
+        <!-- vv-form:feature -->
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version
+      description: Core version you run today (for example 2025.4.1)
+    validations:
+      required: true
+  - type: input
+    id: ha_vv_version
+    attributes:
+      label: VoucherVault (ha-vv) version
+      description: Integration version from manifest or HACS
+    validations:
+      required: true
+  - type: textarea
+    id: feature
+    attributes:
+      label: What do you want?
+    validations:
+      required: true
