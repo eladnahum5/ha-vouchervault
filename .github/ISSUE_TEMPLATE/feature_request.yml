@@ -1,10 +1,6 @@
 name: Feature request
 description: Suggest an improvement or new capability
 body:
-  - type: markdown
-    attributes:
-      value: |
-        <!-- vv-form:feature -->
   - type: textarea
     id: problem
     attributes:
