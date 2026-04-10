@@ -50,7 +50,8 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
-  "card": {
+  "config_panel": {
+    "vouchervault_lovelace": {
     "title": "VoucherVault",
     "loading": "Loading...",
     "entity_not_found": "Entity not found",
@@ -74,6 +75,7 @@
       "redeem_code": "Redeem code",
       "code_type": "Code type",
       "pin": "PIN"
+    }
     }
   }
 }

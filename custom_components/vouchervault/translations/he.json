@@ -50,7 +50,8 @@
             }
         }
     },
-    "card": {
+    "config_panel": {
+        "vouchervault_lovelace": {
         "title": "VoucherVault",
         "loading": "טוען…",
         "entity_not_found": "ישות לא נמצאה",
@@ -74,6 +75,7 @@
             "redeem_code": "קוד מימוש",
             "code_type": "סוג קוד",
             "pin": "PIN"
+        }
         }
     }
 }

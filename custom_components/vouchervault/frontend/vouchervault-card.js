@@ -6,6 +6,11 @@ import {
 
 /** Integration domain; must match custom_components folder name. */
 const VV_DOMAIN = "vouchervault";
+/**
+ * Slug under strings `config_panel` for Lovelace card copy (hassfest allows
+ * config_panel; a top-level `card` key is rejected).
+ */
+const VV_LOVELACE_PANEL = "vouchervault_lovelace";
 
 // Escape special HTML characters to prevent broken markup or XSS when
 // inserting untrusted strings into innerHTML.
@@ -19,7 +24,7 @@ function escHtml(str) {
 
 /** @param {object} hass @param {string} subKey @param {string} fallback */
 function vvTranslateCard(hass, subKey, fallback) {
-    const key = `component.vouchervault.card.${subKey}`;
+    const key = `component.vouchervault.config_panel.${VV_LOVELACE_PANEL}.${subKey}`;
     const out = hass.localize(key);
     if (!out || out === key) {
         return fallback;
@@ -223,9 +228,9 @@ class VoucherVaultCard extends HTMLElement {
     }
 
     /**
-     * Merge `card` strings from the integration into hass.resources.
-     * HA only preloads categories like entity/config; custom `card` keys are omitted
-     * until this runs, so hass.localize would otherwise fall back to English.
+     * Merge `config_panel` strings (under vouchervault_lovelace) into hass.resources.
+     * HA does not preload this category for our domain until requested, so
+     * hass.localize would otherwise fall back to English.
      */
     async _vvLoadCardCategoryIfNeeded(hass) {
         const lang = hass.language || 'en';
@@ -248,7 +253,7 @@ class VoucherVaultCard extends HTMLElement {
         }
         const loadPromise = (async () => {
             try {
-                await hass.loadBackendTranslation('card', VV_DOMAIN);
+                await hass.loadBackendTranslation('config_panel', VV_DOMAIN);
             } catch {
                 // Keep English fallbacks from vvTranslateCard
             }

@@ -50,7 +50,8 @@
             }
         }
     },
-    "card": {
+    "config_panel": {
+        "vouchervault_lovelace": {
         "title": "VoucherVault",
         "loading": "Chargement…",
         "entity_not_found": "Entité introuvable",
@@ -74,6 +75,7 @@
             "redeem_code": "Code d'utilisation",
             "code_type": "Type de code",
             "pin": "PIN"
+        }
         }
     }
 }
