@@ -1,0 +1,81 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "המכשיר כבר מוגדר"
+        },
+        "error": {
+            "cannot_connect": "החיבור נכשל",
+            "invalid_auth": "אימות לא חוקי",
+            "invalid_polling_interval": "מרווח העדכון חייב להיות גדול מ-0 דקות",
+            "unknown": "שגיאה לא צפויה"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_token": "אסימון API",
+                    "host": "מארח",
+                    "password": "סיסמה",
+                    "port": "פורט",
+                    "username": "שם משתמש",
+                    "polling_interval_minutes": "מרווח עדכון (דקות)"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "items": {
+                "name": "פריטים"
+            },
+            "users": {
+                "name": "משתמשים"
+            },
+            "issuers": {
+                "name": "מנפיקים"
+            },
+            "item_details": {
+                "name": "פרטי פריטים"
+            }
+        }
+    },
+    "services": {
+        "toggle_item_status": {
+            "name": "החלפת מצב פריט",
+            "description": "מחליף בין מצב בשימוש לזמין עבור פריט ב-VoucherVault (למשל מימוש או ביטול מימוש של שובר, כרטיס מתנה או קופון).",
+            "fields": {
+                "item_id": {
+                    "name": "מזהה פריט",
+                    "description": "מזהה הפריט להחלפה."
+                }
+            }
+        }
+    },
+    "config_panel": {
+        "vouchervault_lovelace": {
+        "title": "VoucherVault",
+        "loading": "טוען…",
+        "entity_not_found": "ישות לא נמצאה",
+        "no_items_yet": "אין עדיין נתוני פריטים.",
+        "field_not_found": "שדה לא נמצא",
+        "refresh_items": "רענון פריטים",
+        "mark_as_used": "סמן כמשומש",
+        "barcode_error_prefix": "שגיאת ברקוד",
+        "fields": {
+            "id": "מזהה",
+            "type": "סוג",
+            "name": "שם",
+            "issuer": "מנפיק",
+            "value": "ערך",
+            "value_type": "סוג ערך",
+            "issue_date": "תאריך הנפקה",
+            "expiry_date": "תאריך תפוגה",
+            "description": "תיאור",
+            "is_used": "שומש",
+            "user": "משתמש",
+            "redeem_code": "קוד מימוש",
+            "code_type": "סוג קוד",
+            "pin": "PIN"
+        }
+        }
+    }
+}

@@ -1,0 +1,81 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Gerät ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ungültige Authentifizierung",
+            "invalid_polling_interval": "Das Abrufintervall muss größer als 0 Minuten sein",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_token": "API-Token",
+                    "host": "Host",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "username": "Benutzername",
+                    "polling_interval_minutes": "Abrufintervall (Minuten)"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "items": {
+                "name": "Artikel"
+            },
+            "users": {
+                "name": "Benutzer"
+            },
+            "issuers": {
+                "name": "Herausgeber"
+            },
+            "item_details": {
+                "name": "Artikeldetails"
+            }
+        }
+    },
+    "services": {
+        "toggle_item_status": {
+            "name": "Artikelstatus umschalten",
+            "description": "Schaltet den Status „verwendet“ oder „verfügbar“ eines VoucherVault-Artikels um (zum Beispiel Einlösen oder Zurücknehmen eines Gutscheins, Geschenkgutscheins oder Coupons).",
+            "fields": {
+                "item_id": {
+                    "name": "Artikel-ID",
+                    "description": "Die ID des umzuschaltenden Artikels."
+                }
+            }
+        }
+    },
+    "config_panel": {
+        "vouchervault_lovelace": {
+        "title": "VoucherVault",
+        "loading": "Wird geladen …",
+        "entity_not_found": "Entität nicht gefunden",
+        "no_items_yet": "Noch keine Artikeldaten.",
+        "field_not_found": "Feld nicht gefunden",
+        "refresh_items": "Artikel aktualisieren",
+        "mark_as_used": "Als verwendet markieren",
+        "barcode_error_prefix": "Barcodefehler",
+        "fields": {
+            "id": "ID",
+            "type": "Typ",
+            "name": "Name",
+            "issuer": "Herausgeber",
+            "value": "Wert",
+            "value_type": "Werttyp",
+            "issue_date": "Ausstellungsdatum",
+            "expiry_date": "Ablaufdatum",
+            "description": "Beschreibung",
+            "is_used": "Ist verwendet",
+            "user": "Benutzer",
+            "redeem_code": "Einlösecode",
+            "code_type": "Codetyp",
+            "pin": "PIN"
+        }
+        }
+    }
+}
