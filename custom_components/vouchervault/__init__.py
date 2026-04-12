@@ -14,6 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 
+from .config_flow import ConfigFlow
 from .const import DOMAIN
 from .coordinator import VoucherVaultCoordinator
 
@@ -21,9 +22,17 @@ _LOGGER = logging.getLogger(__name__)
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 _CARD_URL = "/vouchervault/vouchervault-card.js"
+_CARD_UTILS_URL = "/vouchervault/vouchervault-card-utils.js"
 _STATIC_PATH_REGISTERED = f"{DOMAIN}_static_path_registered"
 
 type VoucherVaultConfigEntry = ConfigEntry[VoucherVaultCoordinator]
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old config entries (delegates to ConfigFlow)."""
+    flow = ConfigFlow()
+    flow.hass = hass
+    return await flow.async_migrate_entry(hass, entry)
 
 
 def _get_lovelace_resource_collection(hass: HomeAssistant) -> object | None:
@@ -136,13 +145,19 @@ async def async_setup_entry(
     )
 
     if not hass.data.get(_STATIC_PATH_REGISTERED):
+        frontend_dir = Path(__file__).parent / "frontend"
         await hass.http.async_register_static_paths(
             [
                 StaticPathConfig(
                     _CARD_URL,
-                    str(Path(__file__).parent / "frontend" / "vouchervault-card.js"),
+                    str(frontend_dir / "vouchervault-card.js"),
                     cache_headers=False,
-                )
+                ),
+                StaticPathConfig(
+                    _CARD_UTILS_URL,
+                    str(frontend_dir / "vouchervault-card-utils.js"),
+                    cache_headers=False,
+                ),
             ]
         )
         hass.data[_STATIC_PATH_REGISTERED] = True

@@ -3,3 +3,4 @@
 .vscode/
 custom_components/vouchervault/__pycache__
 tests/__pycache__
+frontend/node_modules/

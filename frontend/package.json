@@ -1,0 +1,13 @@
+{
+  "name": "vouchervault-frontend-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "jsdom": "^25.0.1",
+    "lit-element": "^2.5.1",
+    "vitest": "^2.1.9"
+  }
+}

@@ -45,6 +45,14 @@ def client() -> VoucherVaultApiClient:
     )
 
 
+async def test_authenticate_token_false_when_api_returns_none(
+    client: VoucherVaultApiClient,
+) -> None:
+    """Bearer stats request returning None means the token path is invalid."""
+    with patch.object(client, "send_api_request", new=AsyncMock(return_value=None)):
+        assert await client.authenticate_token() is False
+
+
 async def test_get_stats_returns_empty_api_data_when_api_returns_none(
     client: VoucherVaultApiClient,
 ) -> None:

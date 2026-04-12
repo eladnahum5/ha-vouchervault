@@ -1,10 +1,19 @@
 """Common fixtures for the VoucherVault tests."""
 
+import asyncio
+import datetime
+import logging
+import threading
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+import respx
+from homeassistant.core import HassJob
+from homeassistant.util import dt as dt_util
+from homeassistant.util.async_ import get_scheduled_timer_handles
+from pytest_homeassistant_custom_component.common import INSTANCES, MockConfigEntry
+from pytest_homeassistant_custom_component.plugins import long_repr_strings
 
 from homeassistant.components.lovelace.const import DOMAIN as LOVELACE_DOMAIN
 from homeassistant.components.lovelace.resources import ResourceStorageCollection
@@ -17,8 +26,84 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from custom_components.vouchervault.const import DOMAIN
+from custom_components.vouchervault.const import (
+    DOMAIN,
+    POLLING_INTERVAL_MINUTES_KEY,
+    UPDATE_INTERVAL_MINUTES_DEFAULT,
+)
 from custom_components.vouchervault.vouchervault import ApiData
+
+_LOGGER = logging.getLogger(__name__)
+
+
+@pytest.fixture(autouse=True)
+def verify_cleanup(
+    event_loop: asyncio.AbstractEventLoop,
+    expected_lingering_tasks: bool,
+    expected_lingering_timers: bool,
+) -> Generator[None]:
+    """Mirror pytest-homeassistant verify_cleanup (see their ``plugins.py``).
+
+    After ``shutdown_default_executor()``, CPython may leave a short-lived daemon
+    thread named ``_run_safe_shutdown_loop``. That thread is created by the test
+    harness / asyncio, not by this integration, so it is excluded from the
+    stricter thread check. Any other unexpected threads still fail the test.
+    """
+    threads_before = frozenset(threading.enumerate())
+    tasks_before = asyncio.all_tasks(event_loop)
+    yield
+
+    event_loop.run_until_complete(event_loop.shutdown_default_executor())
+
+    if len(INSTANCES) >= 2:
+        count = len(INSTANCES)
+        for inst in INSTANCES:
+            inst.stop()
+        pytest.exit(f"Detected non stopped instances ({count}), aborting test run")
+
+    tasks = asyncio.all_tasks(event_loop) - tasks_before
+    for task in tasks:
+        if expected_lingering_tasks:
+            _LOGGER.warning("Lingering task after test %r", task)
+        else:
+            pytest.fail(f"Lingering task after test {task!r}")
+        task.cancel()
+    if tasks:
+        event_loop.run_until_complete(asyncio.wait(tasks))
+
+    for handle in get_scheduled_timer_handles(event_loop):
+        if not handle.cancelled():
+            with long_repr_strings():
+                if expected_lingering_timers:
+                    _LOGGER.warning("Lingering timer after test %r", handle)
+                elif handle._args and isinstance(job := handle._args[-1], HassJob):
+                    if job.cancel_on_shutdown:
+                        continue
+                    pytest.fail(f"Lingering timer after job {job!r}")
+                else:
+                    pytest.fail(f"Lingering timer after test {handle!r}")
+                handle.cancel()
+
+    threads = frozenset(threading.enumerate()) - threads_before
+    for thread in threads:
+        assert (
+            isinstance(thread, threading._DummyThread)
+            or thread.name.startswith("waitpid-")
+            or "_run_safe_shutdown_loop" in thread.name
+        ), f"Unexpected thread after test: {thread!r}"
+
+    try:
+        assert dt_util.DEFAULT_TIME_ZONE is datetime.UTC
+    finally:
+        dt_util.DEFAULT_TIME_ZONE = datetime.UTC
+
+    try:
+        assert not respx.mock.routes, (
+            "respx.mock routes not cleaned up, maybe the test needs to be decorated "
+            "with @respx.mock"
+        )
+    finally:
+        respx.mock.clear()
 
 
 @pytest.fixture(autouse=True)
@@ -62,6 +147,7 @@ MOCK_CONFIG = {
     CONF_USERNAME: "testuser",
     CONF_PASSWORD: "testpass",
     CONF_API_TOKEN: "test-api-token",
+    POLLING_INTERVAL_MINUTES_KEY: UPDATE_INTERVAL_MINUTES_DEFAULT,
 }
 
 MOCK_API_DATA = ApiData(

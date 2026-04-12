@@ -4,41 +4,11 @@ import {
     css
 } from "https://unpkg.com/lit-element@2.0.1/lit-element.js?module";
 
-/** Integration domain; must match custom_components folder name. */
-const VV_DOMAIN = "vouchervault";
-/**
- * Slug under strings `config_panel` for Lovelace card copy (hassfest allows
- * config_panel; a top-level `card` key is rejected).
- */
-const VV_LOVELACE_PANEL = "vouchervault_lovelace";
-
-// Escape special HTML characters to prevent broken markup or XSS when
-// inserting untrusted strings into innerHTML.
-function escHtml(str) {
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-}
-
-/** @param {object} hass @param {string} subKey @param {string} fallback */
-function vvTranslateCard(hass, subKey, fallback) {
-    const key = `component.vouchervault.config_panel.${VV_LOVELACE_PANEL}.${subKey}`;
-    const out = hass.localize(key);
-    if (!out || out === key) {
-        return fallback;
-    }
-    return out;
-}
-
-/** @param {object} hass @param {string} field */
-function vvFieldLabel(hass, field) {
-    const fallback = field
-        .replace(/_/g, ' ')
-        .replace(/\b\w/g, (char) => char.toUpperCase());
-    return vvTranslateCard(hass, `fields.${field}`, fallback);
-}
+import {
+    escHtml,
+    vvTranslateCard,
+    vvFieldLabel,
+} from "/vouchervault/vouchervault-card-utils.js";
 
 const buttonStyle = css`
     button {
