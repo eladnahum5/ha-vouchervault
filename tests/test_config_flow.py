@@ -5,7 +5,11 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from custom_components.vouchervault.config_flow import CannotConnect, InvalidAuth
-from custom_components.vouchervault.const import DOMAIN
+from custom_components.vouchervault.const import (
+    DOMAIN,
+    POLLING_INTERVAL_MINUTES_KEY,
+    UPDATE_INTERVAL_MINUTES_DEFAULT,
+)
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -54,6 +58,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
         CONF_API_TOKEN: "test-token",
+        POLLING_INTERVAL_MINUTES_KEY: UPDATE_INTERVAL_MINUTES_DEFAULT,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -111,6 +116,7 @@ async def test_form_invalid_auth(
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
         CONF_API_TOKEN: "test-token",
+        POLLING_INTERVAL_MINUTES_KEY: UPDATE_INTERVAL_MINUTES_DEFAULT,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -214,5 +220,6 @@ async def test_form_cannot_connect(
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
         CONF_API_TOKEN: "test-token",
+        POLLING_INTERVAL_MINUTES_KEY: UPDATE_INTERVAL_MINUTES_DEFAULT,
     }
     assert len(mock_setup_entry.mock_calls) == 1

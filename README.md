@@ -29,6 +29,12 @@ This repository is not yet in the default HACS store. Add it as a custom reposit
 
 Copy `custom_components/vouchervault` into your `config/custom_components/` directory and restart Home Assistant.
 
+## Testing
+
+**Python:** create a virtual environment, install [`requirements-test.txt`](requirements-test.txt), then run `pytest` from the repository root. The test suite uses [`pytest-homeassistant-custom-component`](https://github.com/MatthewFlamm/pytest-homeassistant-custom-component).
+
+**Frontend (Lovelace card):** from the [`frontend/`](frontend/) directory, run `npm install` once, then `npm test` (Vitest + jsdom).
+
 ## Configuration
 
 After installation, go to **Settings → Devices & Services → Add Integration** and search for **VoucherVault**. You will be prompted for:

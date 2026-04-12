@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 import aiohttp
+from yarl import URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,8 +61,8 @@ class VoucherVaultApiClient:
     async def authenticate_token(self) -> bool:
         """Verify the token is valid by fetching statistics from the API."""
         _LOGGER.debug("Authenticating with API token to verify access")
-        stats = await self.get_stats()
-        if stats is None:
+        raw = await self.send_api_request("GET", "/en/api/get/stats")
+        if raw is None:
             _LOGGER.error("API token authentication failed")
             return False
         _LOGGER.debug("API token authentication successful")
@@ -92,11 +93,12 @@ class VoucherVaultApiClient:
         connector = aiohttp.TCPConnector(force_close=True)
         jar = aiohttp.CookieJar(unsafe=True)
         session = aiohttp.ClientSession(connector=connector, cookie_jar=jar)
-        login_url = f"{self.url}/en/accounts/login/"
+        login_url_str = f"{self.url}/en/accounts/login/"
+        login_url = URL(login_url_str)
 
         try:
             # First, access the login page to get the CSRF token cookie
-            async with session.get(login_url) as resp:
+            async with session.get(login_url_str) as resp:
                 if resp.status != 200:
                     await session.close()
                     _LOGGER.error(
@@ -121,12 +123,12 @@ class VoucherVaultApiClient:
             }
 
             headers = {
-                "Referer": login_url,
+                "Referer": login_url_str,
             }
 
             # Submit the login form with credentials and CSRF token
             async with session.post(
-                login_url, data=payload, headers=headers, allow_redirects=False
+                login_url_str, data=payload, headers=headers, allow_redirects=False
             ) as resp:
                 if resp.status != 302:
                     await session.close()
@@ -144,7 +146,7 @@ class VoucherVaultApiClient:
 
     async def send_post_with_session(
         self, request_type: str, endpoint: str, data: dict[str, Any] | None = None
-    ) -> dict | None:
+    ) -> dict[str, bool]:
         """Helper method to perform authenticated POST requests using a session cookie."""
         session = await self.login_and_get_session()
         if session is None:
@@ -152,11 +154,16 @@ class VoucherVaultApiClient:
                 "Cannot perform basic authenticated request without valid session"
             )
             return {"success": False}
-        url = f"{self.url}{endpoint}"
-        data["csrfmiddlewaretoken"] = (
-            session.cookie_jar.filter_cookies(url).get("csrftoken").value
-        )
-        async with session.post(url, data=data, allow_redirects=False) as resp:
+        url_str = f"{self.url}{endpoint}"
+        post_url = URL(url_str)
+        form = dict(data or {})
+        csrf = session.cookie_jar.filter_cookies(post_url).get("csrftoken")
+        if not csrf:
+            await session.close()
+            _LOGGER.error("CSRF token not found for authenticated POST")
+            return {"success": False}
+        form["csrfmiddlewaretoken"] = csrf.value
+        async with session.post(url_str, data=form, allow_redirects=False) as resp:
             if resp.status != 302:
                 _LOGGER.error(
                     "Authenticated API request failed, expected redirect but got status %s",

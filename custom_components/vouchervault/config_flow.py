@@ -110,17 +110,17 @@ class ConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> bool:
         """Migrate old entry."""
         _LOGGER.debug("Migrating from version %s", entry.version)
-        if entry.version > 1:
+        if entry.version > self.VERSION:
             # This means the user has downgraded from a future version
             return False
 
         if entry.version == 1:
-            # config polling interval
+            # add polling interval to the entry
             new_data = {**entry.data}
             new_data[POLLING_INTERVAL_MINUTES_KEY] = UPDATE_INTERVAL_MINUTES_DEFAULT
+            hass.config_entries.async_update_entry(entry, data=new_data, version=self.VERSION)
+            _LOGGER.debug("Migration to configuration version %s successful", self.VERSION)
 
-        hass.config_entries.async_update_entry(entry, data=new_data, version=2)
-        _LOGGER.debug("Migration to configuration version %s successful", entry.version)
         return True
 
 
