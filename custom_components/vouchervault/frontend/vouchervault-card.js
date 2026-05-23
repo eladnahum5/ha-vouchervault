@@ -96,6 +96,7 @@ class VoucherVaultCard extends HTMLElement {
             fields_to_show: config.fields_to_show ?? ["name", "issuer", "value", "expiry_date"],
             show_mark_as_used: config.show_mark_as_used ?? true,
             card_title: config.card_title ?? "VoucherVault",
+            show_types: config.show_types ?? [], // Empty array means show all types
         };
 
         // Inject bwip-js once for client-side barcode rendering
@@ -282,6 +283,10 @@ class VoucherVaultCard extends HTMLElement {
                 ${separatorHtml}
             `;
             for (const item of itemDetails) {
+                // check if item type is in filter list (if filter list is not empty)
+                if (this.config.show_types.length > 0 && !this.config.show_types.includes(item.type)) {
+                    continue;
+                }
                 if (item.is_used) {
                     continue; // Skip already-used vouchers
                 }
