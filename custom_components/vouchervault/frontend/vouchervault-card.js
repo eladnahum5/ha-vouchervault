@@ -93,7 +93,8 @@ class VoucherVaultCard extends HTMLElement {
         this.config = {
             ...config,
             barcode_padding: config.barcode_padding ?? 10,
-            fields_to_show: config.fields_to_show ?? ["name", "issuer", "value", "expiry_date"]
+            fields_to_show: config.fields_to_show ?? ["name", "issuer", "value", "expiry_date"],
+            show_mark_as_used: config.show_mark_as_used ?? true,
         };
 
         // Inject bwip-js once for client-side barcode rendering
@@ -191,7 +192,7 @@ class VoucherVaultCard extends HTMLElement {
         return `
                 <div class="voucher-item">
                     ${fieldsHtml}
-                    <mark-as-used-button item_id="${escHtml(item.id)}" entity="${escHtml(entityId)}"></mark-as-used-button><br><br>
+                    ${this.config.show_mark_as_used && item.id ? `<mark-as-used-button item_id="${escHtml(item.id)}" entity="${escHtml(entityId)}"></mark-as-used-button><br><br>` : '<br>'}
                     ${this.generateBarcodeHtml(item.redeem_code, item.code_type)}
                 </div>
             `;
