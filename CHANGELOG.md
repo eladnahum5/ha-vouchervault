@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.0](https://github.com/eladnahum5/ha-vouchervault/compare/v1.1.0...v1.2.0) (2026-05-23)
+
+
+### Features
+
+* add configurable card title for VoucherVault card ([b4b4476](https://github.com/eladnahum5/ha-vouchervault/commit/b4b44768d209169657297f4d86767f95b8b44a7c))
+* add filtering option for item types in VoucherVault card ([2ab96c3](https://github.com/eladnahum5/ha-vouchervault/commit/2ab96c38e4f6089962942ea3dfc7aa2f61a5463b))
+* add option to show/hide 'mark as used' button in voucher card ([1c3674c](https://github.com/eladnahum5/ha-vouchervault/commit/1c3674c78c91b8d6942b31cb8d5f67a6c9e2599f))
+
 ## [1.1.0](https://github.com/eladnahum5/ha-vouchervault/compare/v1.0.2...v1.1.0) (2026-04-10)
 
 
