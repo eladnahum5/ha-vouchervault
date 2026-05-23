@@ -93,7 +93,10 @@ class VoucherVaultCard extends HTMLElement {
         this.config = {
             ...config,
             barcode_padding: config.barcode_padding ?? 10,
-            fields_to_show: config.fields_to_show ?? ["name", "issuer", "value", "expiry_date"]
+            fields_to_show: config.fields_to_show ?? ["name", "issuer", "value", "expiry_date"],
+            show_mark_as_used: config.show_mark_as_used ?? true,
+            card_title: config.card_title ?? "VoucherVault",
+            show_types: config.show_types ?? [], // Empty array means show all types
         };
 
         // Inject bwip-js once for client-side barcode rendering
@@ -116,7 +119,7 @@ class VoucherVaultCard extends HTMLElement {
     _updateCardChrome(hass) {
         const haCard = this.querySelector('ha-card');
         if (haCard) {
-            const title = vvTranslateCard(hass, 'title', 'VoucherVault');
+            const title = vvTranslateCard(hass, 'title', this.config.card_title);
             haCard.setAttribute('header', title);
         }
         if (this.content) {
@@ -191,7 +194,7 @@ class VoucherVaultCard extends HTMLElement {
         return `
                 <div class="voucher-item">
                     ${fieldsHtml}
-                    <mark-as-used-button item_id="${escHtml(item.id)}" entity="${escHtml(entityId)}"></mark-as-used-button><br><br>
+                    ${this.config.show_mark_as_used && item.id ? `<mark-as-used-button item_id="${escHtml(item.id)}" entity="${escHtml(entityId)}"></mark-as-used-button><br><br>` : '<br>'}
                     ${this.generateBarcodeHtml(item.redeem_code, item.code_type)}
                 </div>
             `;
@@ -280,6 +283,10 @@ class VoucherVaultCard extends HTMLElement {
                 ${separatorHtml}
             `;
             for (const item of itemDetails) {
+                // check if item type is in filter list (if filter list is not empty)
+                if (this.config.show_types.length > 0 && !this.config.show_types.includes(item.type)) {
+                    continue;
+                }
                 if (item.is_used) {
                     continue; // Skip already-used vouchers
                 }
