@@ -16,14 +16,11 @@ A Home Assistant integration for [VoucherVault](https://vouchervault.app) — tr
 
 ### HACS (recommended)
 
-This repository is not yet in the default HACS store. Add it as a custom repository first:
+This repository is available in the default HACS store:
 
 1. Open HACS in Home Assistant
-2. Click the three-dot menu (top right) → **Custom repositories**
-3. Enter the repository URL and select category **Integration**
-4. Click **Add**
-5. Search for **VoucherVault** and install it
-6. Restart Home Assistant
+2. Search for **VoucherVault** and install it
+3. Restart Home Assistant
 
 ### Manual
 
@@ -87,11 +84,16 @@ Add the card to any dashboard using the card type `custom:vouchervault-card`.
 type: custom:vouchervault-card
 entity: sensor.vouchervault_192_168_1_100_8000_item_details
 barcodePadding: 20
+card_title: My Vouchers
+show_mark_as_used: true
 fields_to_show:
   - name
   - issuer
   - value
   - expiry_date
+show_types:
+  - voucher
+  - giftcard
 ```
 
 | Parameter | Required | Default | Description |
@@ -99,6 +101,9 @@ fields_to_show:
 | `entity` | Yes | — | The `item_details` sensor entity ID |
 | `barcodePadding` | No | `20` | Padding (in pixels) around rendered barcodes |
 | `fields_to_show` | No | `["name", "issuer", "value", "expiry_date"]` | List of item fields to display on each voucher card |
+| `card_title` | No | `VoucherVault` | Header title shown at the top of the card. Note: if a Home Assistant translation exists for the card title in your language, it takes precedence over this value. |
+| `show_mark_as_used` | No | `true` | Whether to render the **Mark as used** button under each voucher. Set to `false` to hide it. |
+| `show_types` | No | `[]` (all types) | List of item types to display. When empty, all types are shown; otherwise only items whose `type` matches an entry in the list are rendered. |
 
 ### Barcode blur
 
