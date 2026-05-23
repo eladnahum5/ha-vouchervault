@@ -95,6 +95,7 @@ class VoucherVaultCard extends HTMLElement {
             barcode_padding: config.barcode_padding ?? 10,
             fields_to_show: config.fields_to_show ?? ["name", "issuer", "value", "expiry_date"],
             show_mark_as_used: config.show_mark_as_used ?? true,
+            card_title: config.card_title ?? "VoucherVault",
         };
 
         // Inject bwip-js once for client-side barcode rendering
@@ -117,7 +118,7 @@ class VoucherVaultCard extends HTMLElement {
     _updateCardChrome(hass) {
         const haCard = this.querySelector('ha-card');
         if (haCard) {
-            const title = vvTranslateCard(hass, 'title', 'VoucherVault');
+            const title = vvTranslateCard(hass, 'title', this.config.card_title);
             haCard.setAttribute('header', title);
         }
         if (this.content) {
