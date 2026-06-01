@@ -124,9 +124,3 @@ Toggle the active/inactive status of a voucher item.
 | Parameter | Required | Description |
 |-----------|----------|-------------|
 | `item_id` | Yes | The ID of the item to toggle |
-
-## Roadmap
-
-- [ ] Filter vouchers via card YAML (stage 1), then via UI (stage 2, may ship separately)
-- [ ] Sort vouchers via card YAML (stage 1), then via UI (stage 2, may ship separately)
-- [ ] Add support for reconfiguration of polling interval
