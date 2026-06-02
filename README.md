@@ -4,7 +4,7 @@
 
 # VoucherVault for Home Assistant
 
-A Home Assistant integration for [VoucherVault](https://vouchervault.app) — track your vouchers, gift cards, and loyalty cards directly in Home Assistant.
+A Home Assistant integration for [l4rm4nd/VoucherVault](https://github.com/l4rm4nd/VoucherVault) — track your vouchers, gift cards, and loyalty cards directly in Home Assistant.
 
 ## Requirements
 
