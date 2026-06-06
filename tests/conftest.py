@@ -186,6 +186,7 @@ MOCK_API_DATA = ApiData(
             "expiry_date": "2025-12-31",
             "description": "A test voucher",
             "is_used": False,
+            "is_pinned": False,
             "user__username": "testuser",
             "redeem_code": "TESTCODE123",
             "code_type": "text",

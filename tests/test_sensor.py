@@ -82,6 +82,7 @@ async def test_sensor_item_details_state(
     assert item["name"] == "Test Voucher"
     assert item["issuer"] == "Store A"
     assert item["is_used"] is False
+    assert item["is_pinned"] is False
     assert item["redeem_code"] == "TESTCODE123"
     assert item["user"] == "testuser"
 
