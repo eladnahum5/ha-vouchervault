@@ -97,7 +97,19 @@ class VoucherVaultCard extends HTMLElement {
             show_mark_as_used: config.show_mark_as_used ?? true,
             card_title: config.card_title ?? "VoucherVault",
             show_types: config.show_types ?? [], // Empty array means show all types
+            sort_by: config.sort_by ?? "expiry_date",
+            sort_order: config.sort_order ?? "asc", // "asc" or "desc"
         };
+
+        // throw error if sort_by is not in fields_to_show
+        if (!this.config.fields_to_show.includes(this.config.sort_by)) {
+            throw new Error("sort_by field must be included in fields_to_show (fields_to_show default is [name, issuer, value, expiry_date])");
+        }
+        
+        // throw error if sort_order is not "asc" or "desc"
+        if (!["asc", "desc"].includes(this.config.sort_order)) {
+            throw new Error("sort_order must be 'asc' or 'desc'");
+        }
 
         // Inject bwip-js once for client-side barcode rendering
         if (!document.getElementById('bwip-js-script')) {
@@ -200,6 +212,35 @@ class VoucherVaultCard extends HTMLElement {
             `;
     }
 
+    sortItems(items) {
+        // sort by the sort_by field in either ascending or descending order based on sort_order config
+        const sortBy = this.config.sort_by;
+        const sortOrder = this.config.sort_order;
+        items.sort((a, b) => {
+            const aValue = a.item[sortBy] || '';
+            const bValue = b.item[sortBy] || '';
+            if (aValue < bValue) {
+                return sortOrder === 'asc' ? -1 : 1;
+            } else if (aValue > bValue) {
+                return sortOrder === 'asc' ? 1 : -1;
+            } else {
+                return 0;
+            }
+        });
+
+        // now sort by is_pinned
+        items.sort((a, b) => {
+            if (a.item.is_pinned && !b.item.is_pinned) {
+                return -1;
+            } else if (!a.item.is_pinned && b.item.is_pinned) {
+                return 1;
+            } else {
+                return 0;
+            }
+        });
+        return items;
+    }
+
     /**
      * Merge `config_panel` strings (under vouchervault_lovelace) into hass.resources.
      * HA does not preload this category for our domain until requested, so
@@ -282,6 +323,7 @@ class VoucherVaultCard extends HTMLElement {
                 <voucher-refresh-button entity="${escHtml(entityId)}"></voucher-refresh-button>
                 ${separatorHtml}
             `;
+            let itemsToShow = []; // list of dictionaries with keys "item" and "html"
             for (const item of itemDetails) {
                 // check if item type is in filter list (if filter list is not empty)
                 if (this.config.show_types.length > 0 && !this.config.show_types.includes(item.type)) {
@@ -290,11 +332,18 @@ class VoucherVaultCard extends HTMLElement {
                 if (item.is_used) {
                     continue; // Skip already-used vouchers
                 }
-                vouchersHtml += `
+                const itemHtml = `
                     ${this.generateItemHtml(hass, item, entityId)}
                     ${separatorHtml}
                 `;
+                itemsToShow.push({
+                    "item": item,
+                    "html": itemHtml
+                })
             }
+            // add each item's HTML to vouchersHtml, show item.is_pinned = true items first
+            itemsToShow = this.sortItems(itemsToShow);
+            vouchersHtml += itemsToShow.map(i => i.html).join('');
 
             this.content.innerHTML = vouchersHtml;
 

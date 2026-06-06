@@ -110,6 +110,7 @@ SENSOR_DESCRIPTIONS: tuple[VoucherVaultSensorEntityDescription, ...] = (
                     "expiry_date": item.get("expiry_date"),
                     "description": item.get("description"),
                     "is_used": item.get("is_used"),
+                    "is_pinned": item.get("is_pinned"),
                     "user": item.get("user__username"),
                     "redeem_code": item.get("redeem_code"),
                     "code_type": item.get("code_type"),
