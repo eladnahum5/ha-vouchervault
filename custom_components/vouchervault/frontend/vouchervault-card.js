@@ -99,6 +99,7 @@ class VoucherVaultCard extends HTMLElement {
             show_types: config.show_types ?? [], // Empty array means show all types
             sort_by: config.sort_by ?? "expiry_date",
             sort_order: config.sort_order ?? "asc", // "asc" or "desc"
+            barcode_scale: config.barcode_scale ?? 2,
         };
 
         // throw error if sort_by is not in fields_to_show
@@ -109,6 +110,11 @@ class VoucherVaultCard extends HTMLElement {
         // throw error if sort_order is not "asc" or "desc"
         if (!["asc", "desc"].includes(this.config.sort_order)) {
             throw new Error("sort_order must be 'asc' or 'desc'");
+        }
+
+        // throw error if barcode_scale is not a positive number
+        if (typeof this.config.barcode_scale !== "number" || this.config.barcode_scale <= 0) {
+            throw new Error("barcode_scale must be a positive number");
         }
 
         // Inject bwip-js once for client-side barcode rendering
@@ -155,19 +161,18 @@ class VoucherVaultCard extends HTMLElement {
                     {
                         bcid: canvas.dataset.codeType,
                         text: canvas.dataset.code,
-                        scale: 2,
+                        scale: this.config.barcode_scale,
                         includetext: true,
                         backgroundcolor: 'ffffff',
                         paddingwidth: padding,
                         paddingheight: padding,
                     });
-                // Adjust canvas size to fit the card width while maintaining aspect ratio.
-                // Some code types (e.g. QR) are more square, so only set width to 50% for those.
-                if (['qrcode', 'datamatrix', 'azteccode'].includes(canvas.dataset.codeType)) {
-                    canvas.style.width = '50%';
-                } else {
-                    canvas.style.width = '100%';
-                }
+
+                // Let the canvas display at its natural rendered size (driven by scale),
+                // but cap it so it never overflows the card.
+                canvas.style.maxWidth = ['qrcode', 'datamatrix', 'azteccode']
+                    .includes(canvas.dataset.codeType) ? '50%' : '100%';
+                canvas.style.width = '';    // clear any previous override
                 canvas.style.height = 'auto';
             } catch (e) {
                 canvas.parentElement.insertAdjacentHTML(
