@@ -5,12 +5,12 @@
 
 ### ⚠ BREAKING CHANGES
 
-* add sorting functionality for vouchers by expiry date and pinned status. Required updating VoucherVault to at least version v1.27.10
+* add sorting functionality for vouchers by expiry date and pinned status. Requires updating VoucherVault to at least version v1.27.10
 
 ### Features
 
 * add barcode_scale configuration option and validation for positive values ([33e7501](https://github.com/eladnahum5/ha-vouchervault/commit/33e7501d04e1dcfc497e3bfc893bbc9b118bb75b))
-* add sorting functionality for vouchers by expiry date and pinned status. Required updating VoucherVault to at least version v1.27.10 ([4bf4372](https://github.com/eladnahum5/ha-vouchervault/commit/4bf437201657535a915b4a7e4699e0180b8d3145))
+* add sorting functionality for vouchers by expiry date and pinned status. Requires updating VoucherVault to at least version v1.27.10 ([4bf4372](https://github.com/eladnahum5/ha-vouchervault/commit/4bf437201657535a915b4a7e4699e0180b8d3145))
 
 ## [1.2.0](https://github.com/eladnahum5/ha-vouchervault/compare/v1.1.0...v1.2.0) (2026-05-23)
 
