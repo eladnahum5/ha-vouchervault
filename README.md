@@ -100,10 +100,13 @@ show_types:
 |-----------|----------|---------|-------------|
 | `entity` | Yes | — | The `item_details` sensor entity ID |
 | `barcodePadding` | No | `20` | Padding (in pixels) around rendered barcodes |
+| `barcode_scale` | No | `2` | Scale factor passed to the barcode renderer. Higher values produce larger barcodes. Must be a positive number. Square code types (`qrcode`, `datamatrix`, `azteccode`) are capped at 50% of the card width; all other types at 100%. |
 | `fields_to_show` | No | `["name", "issuer", "value", "expiry_date"]` | List of item fields to display on each voucher card |
 | `card_title` | No | `VoucherVault` | Header title shown at the top of the card. Note: if a Home Assistant translation exists for the card title in your language, it takes precedence over this value. |
 | `show_mark_as_used` | No | `true` | Whether to render the **Mark as used** button under each voucher. Set to `false` to hide it. |
 | `show_types` | No | `[]` (all types) | List of item types to display. When empty, all types are shown; otherwise only items whose `type` matches an entry in the list are rendered. |
+| `sort_by` | No | `expiry_date` | Field used to sort vouchers. Must be one of the fields listed in `fields_to_show`. Requires VoucherVault ≥ v1.27.10. |
+| `sort_order` | No | `asc` | Sort direction: `asc` (ascending) or `desc` (descending). Pinned items are always shown first regardless of sort order. |
 
 ### Barcode blur
 
