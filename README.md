@@ -84,6 +84,7 @@ Add the card to any dashboard using the card type `custom:vouchervault-card`.
 type: custom:vouchervault-card
 entity: sensor.vouchervault_192_168_1_100_8000_item_details
 barcodePadding: 20
+barcode_scale: 2
 card_title: My Vouchers
 show_mark_as_used: true
 fields_to_show:
@@ -94,6 +95,8 @@ fields_to_show:
 show_types:
   - voucher
   - giftcard
+sort_by: expiry_date
+sort_order: asc
 ```
 
 | Parameter | Required | Default | Description |
