@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.1.0](https://github.com/eladnahum5/ha-vouchervault/compare/v2.0.0...v2.1.0) (2026-07-12)
+
+
+### Features
+
+* add is_pinned translation and skip card_title translation when configured ([7ed96d1](https://github.com/eladnahum5/ha-vouchervault/commit/7ed96d162dd8878ca0d9392395ade71a7e128ffd))
+* make expiry date optional and add barcode show/hide toggle ([4438260](https://github.com/eladnahum5/ha-vouchervault/commit/44382608969b132672ef480aa609c026aea8df1c))
+* treat all fields_to_show entries as optional ([7ff699f](https://github.com/eladnahum5/ha-vouchervault/commit/7ff699fc2cd022e5ce3cfcbe5de334cf4d912921))
+
+
+### Bug Fixes
+
+* remove unnecessary line break in voucher item rendering ([b813268](https://github.com/eladnahum5/ha-vouchervault/commit/b8132682cdc467510bf21db715bf1ac5a7b43d9d))
+
 ## [2.0.0](https://github.com/eladnahum5/ha-vouchervault/compare/v1.2.0...v2.0.0) (2026-06-06)
 
 
