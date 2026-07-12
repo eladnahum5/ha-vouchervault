@@ -56,7 +56,6 @@
         "loading": "Cargando…",
         "entity_not_found": "Entidad no encontrada",
         "no_items_yet": "Aún no hay datos de artículos.",
-        "field_not_found": "Campo no encontrado",
         "refresh_items": "Actualizar artículos",
         "mark_as_used": "Marcar como usado",
         "barcode_error_prefix": "Error de código de barras",

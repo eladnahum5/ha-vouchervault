@@ -100,6 +100,7 @@ class VoucherVaultCard extends HTMLElement {
             barcode_padding: config.barcode_padding ?? 10,
             fields_to_show: config.fields_to_show ?? ["name", "issuer", "value", "expiry_date"],
             show_mark_as_used: config.show_mark_as_used ?? true,
+            show_barcode: config.show_barcode ?? true,
             card_title: config.card_title ?? "VoucherVault",
             show_types: config.show_types ?? [], // Empty array means show all types
             sort_by: config.sort_by ?? "expiry_date",
@@ -111,7 +112,7 @@ class VoucherVaultCard extends HTMLElement {
         if (!this.config.fields_to_show.includes(this.config.sort_by)) {
             throw new Error("sort_by field must be included in fields_to_show (fields_to_show default is [name, issuer, value, expiry_date])");
         }
-        
+
         // throw error if sort_order is not "asc" or "desc"
         if (!["asc", "desc"].includes(this.config.sort_order)) {
             throw new Error("sort_order must be 'asc' or 'desc'");
@@ -122,8 +123,9 @@ class VoucherVaultCard extends HTMLElement {
             throw new Error("barcode_scale must be a positive number");
         }
 
-        // Inject bwip-js once for client-side barcode rendering
-        if (!document.getElementById('bwip-js-script')) {
+        // Inject bwip-js once for client-side barcode rendering. Skip entirely
+        // when barcodes are hidden, so the extra script is never loaded.
+        if (this.config.show_barcode && !document.getElementById('bwip-js-script')) {
             const script = document.createElement('script');
             script.id = 'bwip-js-script';
             script.src = 'https://cdn.jsdelivr.net/npm/bwip-js/dist/bwip-js-min.js';
@@ -206,22 +208,23 @@ class VoucherVaultCard extends HTMLElement {
     }
 
     generateItemHtml(hass, item, entityId) {
-        // Loop through fields_to_show and only include those in the output
+        // Loop through fields_to_show and only include those that have a
+        // value on this item. All fields are optional: not every voucher or
+        // gift card has every field (e.g. no expiry_date), so a missing value
+        // is simply omitted rather than flagged as an error. Whether a field
+        // name is valid at all is VoucherVault's concern, not this card's.
         let fieldsHtml = '';
         for (const field of this.config.fields_to_show) {
             if (item[field]) {
                 const displayField = vvFieldLabel(hass, field);
                 fieldsHtml += `${escHtml(displayField)}: ${escHtml(item[field])}<br>`;
-            } else {
-                const prefix = vvTranslateCard(hass, 'field_not_found', 'Field not found');
-                fieldsHtml += `<span style="color:red;font-size:0.8em">${escHtml(prefix)}: ${escHtml(field)}</span><br>`;
             }
         }
         return `
                 <div class="voucher-item">
                     ${fieldsHtml}
-                    ${this.config.show_mark_as_used && item.id ? `<mark-as-used-button item_id="${escHtml(item.id)}" entity="${escHtml(entityId)}"></mark-as-used-button><br><br>` : '<br>'}
-                    ${this.generateBarcodeHtml(item.redeem_code, item.code_type)}
+                    ${this.config.show_mark_as_used && item.id ? `<mark-as-used-button item_id="${escHtml(item.id)}" entity="${escHtml(entityId)}"></mark-as-used-button><br><br>` : ''}
+                    ${this.config.show_barcode ? this.generateBarcodeHtml(item.redeem_code, item.code_type) : ''}
                 </div>
             `;
     }
@@ -361,13 +364,16 @@ class VoucherVaultCard extends HTMLElement {
 
             this.content.innerHTML = vouchersHtml;
 
-            // Render barcodes, or defer until bwip-js finishes loading
-            if (window.bwipjs) {
-                this._renderBwipBarcodes();
-            } else {
-                const script = document.getElementById('bwip-js-script');
-                if (script) {
-                    script.addEventListener('load', () => this._renderBwipBarcodes(), { once: true });
+            // Render barcodes, or defer until bwip-js finishes loading. Skipped
+            // entirely when barcodes are hidden, since no canvases exist.
+            if (this.config.show_barcode) {
+                if (window.bwipjs) {
+                    this._renderBwipBarcodes();
+                } else {
+                    const script = document.getElementById('bwip-js-script');
+                    if (script) {
+                        script.addEventListener('load', () => this._renderBwipBarcodes(), { once: true });
+                    }
                 }
             }
         }
