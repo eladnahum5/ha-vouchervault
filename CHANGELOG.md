@@ -5,8 +5,7 @@
 
 ### Features
 
-* add is_pinned translation and skip card_title translation when … ([347fe18](https://github.com/eladnahum5/ha-vouchervault/commit/347fe18cc4b5220ffd34faa242786fda3dfd26c4))
-* add is_pinned translation and skip card_title translation when configured ([7ed96d1](https://github.com/eladnahum5/ha-vouchervault/commit/7ed96d162dd8878ca0d9392395ade71a7e128ffd)), closes [#32](https://github.com/eladnahum5/ha-vouchervault/issues/32)
+* add is_pinned translation and skip card_title translation when configured ([7ed96d1](https://github.com/eladnahum5/ha-vouchervault/commit/7ed96d162dd8878ca0d9392395ade71a7e128ffd))
 * make expiry date optional and add barcode show/hide toggle ([4438260](https://github.com/eladnahum5/ha-vouchervault/commit/44382608969b132672ef480aa609c026aea8df1c))
 * treat all fields_to_show entries as optional ([7ff699f](https://github.com/eladnahum5/ha-vouchervault/commit/7ff699fc2cd022e5ce3cfcbe5de334cf4d912921))
 
