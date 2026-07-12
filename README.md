@@ -28,9 +28,19 @@ Copy `custom_components/vouchervault` into your `config/custom_components/` dire
 
 ## Testing
 
-The frontend (Lovelace card) test suite runs automatically in CI on every push and pull request, so there's no need to run it manually before submitting changes. To run it locally anyway, go to the [`frontend/`](frontend/) directory, run `npm install` once, then `npm test` (Vitest + jsdom).
+Both the frontend (Lovelace card) and backend (Python) test suites run automatically in CI on every push and pull request, so there's no need to run them manually before submitting changes.
 
-**Python:** create a virtual environment, install [`requirements-test.txt`](requirements-test.txt), then run `pytest` from the repository root. The test suite uses [`pytest-homeassistant-custom-component`](https://github.com/MatthewFlamm/pytest-homeassistant-custom-component).
+**Frontend:** to run it locally anyway, go to the [`frontend/`](frontend/) directory, run `npm install` once, then `npm test` (Vitest + jsdom).
+
+**Backend:** create a virtual environment, then install the pinned test dependencies in two steps (the second step intentionally downgrades `aiohttp` past what `pytest-homeassistant-custom-component` would otherwise pull in, to keep it compatible with `aioresponses`; pip's resulting dependency warning is expected and safe to ignore):
+
+```bash
+pip install -r requirements-test.txt
+pip install aiohttp==3.12.15
+pytest tests/
+```
+
+The test suite uses [`pytest-homeassistant-custom-component`](https://github.com/MatthewFlamm/pytest-homeassistant-custom-component).
 
 ## Configuration
 
