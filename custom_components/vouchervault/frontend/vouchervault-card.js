@@ -21,6 +21,13 @@ const buttonStyle = css`
     }
 `;
 
+// Fields that are allowed to be absent on an item without being treated as a
+// card misconfiguration (e.g. a misspelled field in `fields_to_show`). When
+// one of these is missing, the row is silently omitted instead of showing a
+// "Field not found" error. `expiry_date` is optional because not every
+// voucher or gift card has an expiration date.
+const OPTIONAL_ITEM_FIELDS = new Set(["expiry_date"]);
+
 class VoucherRefreshButton extends LitElement {
     static get properties() {
         return {
@@ -100,6 +107,7 @@ class VoucherVaultCard extends HTMLElement {
             barcode_padding: config.barcode_padding ?? 10,
             fields_to_show: config.fields_to_show ?? ["name", "issuer", "value", "expiry_date"],
             show_mark_as_used: config.show_mark_as_used ?? true,
+            show_barcode: config.show_barcode ?? true,
             card_title: config.card_title ?? "VoucherVault",
             show_types: config.show_types ?? [], // Empty array means show all types
             sort_by: config.sort_by ?? "expiry_date",
@@ -122,8 +130,9 @@ class VoucherVaultCard extends HTMLElement {
             throw new Error("barcode_scale must be a positive number");
         }
 
-        // Inject bwip-js once for client-side barcode rendering
-        if (!document.getElementById('bwip-js-script')) {
+        // Inject bwip-js once for client-side barcode rendering. Skip entirely
+        // when barcodes are hidden, so the extra script is never loaded.
+        if (this.config.show_barcode && !document.getElementById('bwip-js-script')) {
             const script = document.createElement('script');
             script.id = 'bwip-js-script';
             script.src = 'https://cdn.jsdelivr.net/npm/bwip-js/dist/bwip-js-min.js';
@@ -212,6 +221,10 @@ class VoucherVaultCard extends HTMLElement {
             if (item[field]) {
                 const displayField = vvFieldLabel(hass, field);
                 fieldsHtml += `${escHtml(displayField)}: ${escHtml(item[field])}<br>`;
+            } else if (OPTIONAL_ITEM_FIELDS.has(field)) {
+                // Optional fields (e.g. expiry_date) are simply omitted when the
+                // item has no value for them, rather than flagged as an error.
+                continue;
             } else {
                 const prefix = vvTranslateCard(hass, 'field_not_found', 'Field not found');
                 fieldsHtml += `<span style="color:red;font-size:0.8em">${escHtml(prefix)}: ${escHtml(field)}</span><br>`;
@@ -221,7 +234,7 @@ class VoucherVaultCard extends HTMLElement {
                 <div class="voucher-item">
                     ${fieldsHtml}
                     ${this.config.show_mark_as_used && item.id ? `<mark-as-used-button item_id="${escHtml(item.id)}" entity="${escHtml(entityId)}"></mark-as-used-button><br><br>` : '<br>'}
-                    ${this.generateBarcodeHtml(item.redeem_code, item.code_type)}
+                    ${this.config.show_barcode ? this.generateBarcodeHtml(item.redeem_code, item.code_type) : ''}
                 </div>
             `;
     }
@@ -361,13 +374,16 @@ class VoucherVaultCard extends HTMLElement {
 
             this.content.innerHTML = vouchersHtml;
 
-            // Render barcodes, or defer until bwip-js finishes loading
-            if (window.bwipjs) {
-                this._renderBwipBarcodes();
-            } else {
-                const script = document.getElementById('bwip-js-script');
-                if (script) {
-                    script.addEventListener('load', () => this._renderBwipBarcodes(), { once: true });
+            // Render barcodes, or defer until bwip-js finishes loading. Skipped
+            // entirely when barcodes are hidden, since no canvases exist.
+            if (this.config.show_barcode) {
+                if (window.bwipjs) {
+                    this._renderBwipBarcodes();
+                } else {
+                    const script = document.getElementById('bwip-js-script');
+                    if (script) {
+                        script.addEventListener('load', () => this._renderBwipBarcodes(), { once: true });
+                    }
                 }
             }
         }

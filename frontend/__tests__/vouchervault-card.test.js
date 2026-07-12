@@ -124,6 +124,126 @@ describe("VoucherVaultCard", () => {
         expect(haCard.getAttribute("header")).toBe("Translated Title");
     });
 
+    it("omits expiry_date silently when the item has no value for it", async () => {
+        const card = document.createElement("vouchervault-card");
+        card.setConfig({ entity: ENTITY });
+        const hass = makeHass({
+            states: {
+                [ENTITY]: {
+                    state: "1",
+                    attributes: {
+                        items: [
+                            {
+                                id: "no-exp",
+                                name: "NoExpiry",
+                                issuer: "Store",
+                                value: "5",
+                                // expiry_date intentionally omitted
+                                redeem_code: "CODE",
+                                code_type: "qrcode",
+                                is_used: false,
+                            },
+                        ],
+                    },
+                },
+            },
+        });
+        card.hass = hass;
+        await Promise.resolve();
+        expect(card.textContent).toContain("NoExpiry");
+        expect(card.textContent).not.toMatch(/field not found/i);
+        expect(card.textContent).not.toMatch(/expiry date/i);
+    });
+
+    it("still shows field not found for genuinely misconfigured fields", async () => {
+        const card = document.createElement("vouchervault-card");
+        card.setConfig({
+            entity: ENTITY,
+            fields_to_show: ["name", "totally_made_up_field"],
+            sort_by: "name",
+        });
+        const hass = makeHass({
+            states: {
+                [ENTITY]: {
+                    state: "1",
+                    attributes: {
+                        items: [
+                            {
+                                id: "a1",
+                                name: "Active",
+                                redeem_code: "CODE",
+                                code_type: "qrcode",
+                                is_used: false,
+                            },
+                        ],
+                    },
+                },
+            },
+        });
+        card.hass = hass;
+        await Promise.resolve();
+        expect(card.textContent).toMatch(/field not found/i);
+        expect(card.textContent).toContain("totally_made_up_field");
+    });
+
+    it("hides the barcode canvas when show_barcode is false", async () => {
+        const card = document.createElement("vouchervault-card");
+        card.setConfig({ entity: ENTITY, show_barcode: false });
+        const hass = makeHass({
+            states: {
+                [ENTITY]: {
+                    state: "1",
+                    attributes: {
+                        items: [
+                            {
+                                id: "a1",
+                                name: "Active",
+                                issuer: "Store",
+                                value: "10",
+                                expiry_date: "2099-01-01",
+                                redeem_code: "CODE",
+                                code_type: "qrcode",
+                                is_used: false,
+                            },
+                        ],
+                    },
+                },
+            },
+        });
+        card.hass = hass;
+        await Promise.resolve();
+        expect(card.querySelector("canvas[data-bwip]")).toBeNull();
+    });
+
+    it("shows the barcode canvas by default", async () => {
+        const card = document.createElement("vouchervault-card");
+        card.setConfig({ entity: ENTITY });
+        const hass = makeHass({
+            states: {
+                [ENTITY]: {
+                    state: "1",
+                    attributes: {
+                        items: [
+                            {
+                                id: "a1",
+                                name: "Active",
+                                issuer: "Store",
+                                value: "10",
+                                expiry_date: "2099-01-01",
+                                redeem_code: "CODE",
+                                code_type: "qrcode",
+                                is_used: false,
+                            },
+                        ],
+                    },
+                },
+            },
+        });
+        card.hass = hass;
+        await Promise.resolve();
+        expect(card.querySelector("canvas[data-bwip]")).toBeTruthy();
+    });
+
     it("refresh button calls homeassistant.update_entity", async () => {
         const card = document.createElement("vouchervault-card");
         card.setConfig({ entity: ENTITY });

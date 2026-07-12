@@ -87,6 +87,7 @@ barcodePadding: 20
 barcode_scale: 2
 card_title: My Vouchers
 show_mark_as_used: true
+show_barcode: true
 fields_to_show:
   - name
   - issuer
@@ -107,6 +108,7 @@ sort_order: asc
 | `fields_to_show` | No | `["name", "issuer", "value", "expiry_date"]` | List of item fields to display on each voucher card |
 | `card_title` | No | `VoucherVault` | Header title shown at the top of the card. Note: if a Home Assistant translation exists for the card title in your language, it takes precedence over this value. |
 | `show_mark_as_used` | No | `true` | Whether to render the **Mark as used** button under each voucher. Set to `false` to hide it. |
+| `show_barcode` | No | `true` | Whether to render the barcode for each voucher. Set to `false` to hide it, for example on dashboards where you only need a quick status overview. |
 | `show_types` | No | `[]` (all types) | List of item types to display. When empty, all types are shown; otherwise only items whose `type` matches an entry in the list are rendered. |
 | `sort_by` | No | `expiry_date` | Field used to sort vouchers. Must be one of the fields listed in `fields_to_show`. Requires VoucherVault ≥ v1.27.10. |
 | `sort_order` | No | `asc` | Sort direction: `asc` (ascending) or `desc` (descending). Pinned items are always shown first regardless of sort order. |
@@ -116,6 +118,10 @@ sort_order: asc
 Barcodes are blurred by default to prevent accidental exposure. **Tap or click any barcode to toggle the blur on and off.**
 
 The blur resets when the card rebuilds its content (i.e. when the underlying sensor data changes).
+
+### Vouchers without an expiration date
+
+`expiry_date` is treated as optional. If a voucher or gift card has no expiration date, the field is simply omitted from its card instead of showing an error — no placeholder date is required.
 
 ### Card language
 
