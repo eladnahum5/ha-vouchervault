@@ -1,5 +1,6 @@
 """Tests for VoucherVault integration setup and teardown."""
 
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -10,7 +11,11 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 
-from custom_components.vouchervault import _async_register_lovelace_resource
+from custom_components.vouchervault import (
+    _async_register_lovelace_resource,
+    _async_unregister_lovelace_resource,
+    async_unload_entry,
+)
 from custom_components.vouchervault.const import DOMAIN
 
 pytestmark = pytest.mark.usefixtures("enable_custom_integrations")
@@ -154,13 +159,30 @@ async def test_lovelace_resource_skipped_in_yaml_mode(
     mock_yaml_resources.async_create_item.assert_not_called()
 
 
+def _reassert_lovelace_resources(
+    hass: HomeAssistant, mock_lovelace_resources: AsyncMock
+) -> None:
+    """Re-point hass.data[LOVELACE_DOMAIN] at our mock after integration setup.
+
+    Real lovelace setup (triggered by init_integration) may have replaced the
+    dict this fixture originally seeded with its own LovelaceData dataclass
+    instance, so re-apply the mock in whichever shape is currently present,
+    matching the source's own _get_lovelace_resource_collection helper.
+    """
+    lovelace_data = hass.data.get(LOVELACE_DOMAIN)
+    if isinstance(lovelace_data, dict):
+        lovelace_data["resources"] = mock_lovelace_resources
+    else:
+        hass.data[LOVELACE_DOMAIN] = SimpleNamespace(resources=mock_lovelace_resources)
+
+
 async def test_lovelace_resource_unregistered_on_unload(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_lovelace_resources: AsyncMock,
 ) -> None:
     """Test Lovelace card resource is removed on unload."""
-    hass.data.setdefault(LOVELACE_DOMAIN, {})["resources"] = mock_lovelace_resources
+    _reassert_lovelace_resources(hass, mock_lovelace_resources)
     hass.data.setdefault(DOMAIN, {})[init_integration.entry_id] = "test-resource-id"
 
     await hass.config_entries.async_unload(init_integration.entry_id)
@@ -188,3 +210,110 @@ async def test_lovelace_resource_registered_with_lovelace_data_object(
     mock_lovelace_resources.async_create_item.assert_called_once_with(
         {CONF_RESOURCE_TYPE_WS: "module", CONF_URL: "/vouchervault/vouchervault-card.js"}
     )
+
+
+async def test_lovelace_resource_registration_skipped_when_no_lovelace_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test resource registration is skipped when there is no Lovelace data at all."""
+    hass.data.pop(LOVELACE_DOMAIN, None)
+
+    await _async_register_lovelace_resource(hass, mock_config_entry.entry_id)
+
+    assert DOMAIN not in hass.data or mock_config_entry.entry_id not in hass.data[DOMAIN]
+
+
+@pytest.mark.usefixtures("mock_vouchervault_client")
+async def test_lovelace_resource_registration_skipped_when_already_registered(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lovelace_resources: AsyncMock,
+) -> None:
+    """Test registration is a no-op when the card resource already exists."""
+    mock_lovelace_resources.async_items.return_value = [
+        {CONF_URL: "/vouchervault/vouchervault-card.js", "id": "existing-id"}
+    ]
+
+    await _async_register_lovelace_resource(hass, mock_config_entry.entry_id)
+
+    mock_lovelace_resources.async_create_item.assert_not_called()
+    assert DOMAIN not in hass.data or mock_config_entry.entry_id not in hass.data[DOMAIN]
+
+
+async def test_lovelace_resource_unregister_skipped_when_no_lovelace_data(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test unregistration is a no-op when there is no valid resource collection."""
+    hass.data.pop(LOVELACE_DOMAIN, None)
+    hass.data.setdefault(DOMAIN, {})[init_integration.entry_id] = "test-resource-id"
+
+    # Should not raise even though there is nothing to unregister from.
+    await _async_unregister_lovelace_resource(hass, init_integration.entry_id)
+
+
+@pytest.mark.usefixtures("mock_vouchervault_client")
+async def test_lovelace_resource_loaded_before_checking_items(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lovelace_resources: AsyncMock,
+) -> None:
+    """Test the resource collection is loaded via async_get_info if not yet loaded."""
+    mock_lovelace_resources.loaded = False
+
+    await _async_register_lovelace_resource(hass, mock_config_entry.entry_id)
+
+    mock_lovelace_resources.async_get_info.assert_called_once()
+    mock_lovelace_resources.async_create_item.assert_called_once_with(
+        {CONF_RESOURCE_TYPE_WS: "module", CONF_URL: "/vouchervault/vouchervault-card.js"}
+    )
+
+
+async def test_lovelace_resource_unregister_finds_by_url_when_id_missing(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_lovelace_resources: AsyncMock,
+) -> None:
+    """Test unregistering falls back to searching by URL when no stored resource ID."""
+    _reassert_lovelace_resources(hass, mock_lovelace_resources)
+    mock_lovelace_resources.async_items.return_value = [
+        {CONF_URL: "/vouchervault/vouchervault-card.js", "id": "found-by-url-id"}
+    ]
+    # No entry recorded under hass.data[DOMAIN], forcing the URL-search fallback.
+    hass.data.setdefault(DOMAIN, {}).pop(init_integration.entry_id, None)
+
+    await _async_unregister_lovelace_resource(hass, init_integration.entry_id)
+
+    mock_lovelace_resources.async_delete_item.assert_called_once_with("found-by-url-id")
+
+
+async def test_lovelace_resource_unregister_swallows_delete_errors(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_lovelace_resources: AsyncMock,
+) -> None:
+    """Test unregistering does not raise if deleting the resource fails."""
+    _reassert_lovelace_resources(hass, mock_lovelace_resources)
+    mock_lovelace_resources.async_delete_item.side_effect = RuntimeError("boom")
+    hass.data.setdefault(DOMAIN, {})[init_integration.entry_id] = "test-resource-id"
+
+    # Should not raise despite the delete failure.
+    await _async_unregister_lovelace_resource(hass, init_integration.entry_id)
+
+    mock_lovelace_resources.async_delete_item.assert_called_once_with("test-resource-id")
+
+
+async def test_async_unload_entry_returns_false_when_platforms_fail_to_unload(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test async_unload_entry returns False without side effects if platform unload fails."""
+    with patch.object(
+        hass.config_entries, "async_unload_platforms", AsyncMock(return_value=False)
+    ):
+        result = await async_unload_entry(hass, init_integration)
+
+    assert result is False
+    # The service should remain registered since unload did not proceed.
+    assert hass.services.has_service(DOMAIN, "toggle_item_status")
