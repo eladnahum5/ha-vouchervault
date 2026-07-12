@@ -222,6 +222,41 @@ async def test_send_post_with_session_fails_without_login(
 
 
 @_socket
+async def test_send_post_with_session_fails_when_csrf_cookie_not_scoped_to_target() -> (
+    None
+):
+    """A valid session without a CSRF cookie for the target path still fails.
+
+    The login page's Set-Cookie scopes csrftoken to the login path only, so
+    the cookie jar has no CSRF cookie to send when POSTing to a different
+    path (e.g. the toggle-status endpoint), even though login itself succeeded.
+    """
+    app = web.Application()
+
+    async def login_get(_request: web.Request) -> web.StreamResponse:
+        resp = web.Response(text="<html></html>")
+        resp.set_cookie("csrftoken", "abc123", path="/en/accounts/login/")
+        return resp
+
+    async def login_post(_request: web.Request) -> web.StreamResponse:
+        return web.Response(status=302, text="login")
+
+    app.router.add_get("/en/accounts/login/", login_get)
+    app.router.add_post("/en/accounts/login/", login_post)
+
+    runner, port = await _start_site(app)
+    try:
+        srv_client = _client_for_port(port)
+        result = await srv_client.send_post_with_session(
+            "POST", "/en/items/toggle_status/item-1", data={}
+        )
+    finally:
+        await _cleanup_runner(runner)
+
+    assert result == {"success": False}
+
+
+@_socket
 async def test_send_post_with_session_success() -> None:
     """Full login + POST with 302 returns success (real session cookies)."""
     async with _login_app(login_post_status=302, toggle_post_status=302) as (

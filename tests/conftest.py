@@ -8,6 +8,8 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+import pytest_asyncio
+import pytest_socket
 import respx
 from homeassistant.core import HassJob
 from homeassistant.util import dt as dt_util
@@ -36,19 +38,50 @@ from custom_components.vouchervault.vouchervault import ApiData
 _LOGGER = logging.getLogger(__name__)
 
 
-@pytest.fixture(autouse=True)
+@pytest.hookimpl(trylast=True)
+def pytest_runtest_setup(item: pytest.Item) -> None:
+    """Re-enable sockets for ``enable_socket``-marked tests, deterministically.
+
+    Both ``pytest_homeassistant_custom_component`` (unconditionally disables
+    sockets every test) and ``pytest_socket`` (re-enables sockets for
+    ``enable_socket``-marked tests) implement the non-firstresult
+    ``pytest_runtest_setup`` hook. Since neither uses ``tryfirst``/``trylast``,
+    their relative call order depends on plugin entry-point registration
+    order, which pytest explicitly documents as undefined for entry-point
+    based plugins (see https://github.com/pytest-dev/pytest/issues/8688).
+    This can differ between machines/CI runners, so whichever hook happens to
+    run last silently wins the global socket-enabled state.
+
+    Marking this hook ``trylast=True`` guarantees it always runs after both
+    of the above, regardless of their registration order, so tests marked
+    ``enable_socket`` reliably get working sockets in every environment.
+    """
+    if item.get_closest_marker("enable_socket") or "socket_enabled" in getattr(
+        item, "fixturenames", ()
+    ):
+        pytest_socket.enable_socket()
+
+
+@pytest_asyncio.fixture(autouse=True)
 def verify_cleanup(
-    event_loop: asyncio.AbstractEventLoop,
     expected_lingering_tasks: bool,
     expected_lingering_timers: bool,
 ) -> Generator[None]:
     """Mirror pytest-homeassistant verify_cleanup (see their ``plugins.py``).
+
+    This fixture requires the event loop to be stopped, so it cannot be an
+    async fixture. It is decorated with ``@pytest_asyncio.fixture`` (rather
+    than ``@pytest.fixture``) purely so pytest-asyncio sets up the correct
+    event loop before this fixture runs; ``asyncio.get_event_loop()`` is
+    called directly instead of depending on the removed ``event_loop``
+    fixture, matching upstream's current implementation.
 
     After ``shutdown_default_executor()``, CPython may leave a short-lived daemon
     thread named ``_run_safe_shutdown_loop``. That thread is created by the test
     harness / asyncio, not by this integration, so it is excluded from the
     stricter thread check. Any other unexpected threads still fail the test.
     """
+    event_loop = asyncio.get_event_loop()
     threads_before = frozenset(threading.enumerate())
     tasks_before = asyncio.all_tasks(event_loop)
     yield
