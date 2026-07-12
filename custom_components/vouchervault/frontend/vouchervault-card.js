@@ -112,7 +112,7 @@ class VoucherVaultCard extends HTMLElement {
         if (!this.config.fields_to_show.includes(this.config.sort_by)) {
             throw new Error("sort_by field must be included in fields_to_show (fields_to_show default is [name, issuer, value, expiry_date])");
         }
-        
+
         // throw error if sort_order is not "asc" or "desc"
         if (!["asc", "desc"].includes(this.config.sort_order)) {
             throw new Error("sort_order must be 'asc' or 'desc'");
@@ -223,7 +223,7 @@ class VoucherVaultCard extends HTMLElement {
         return `
                 <div class="voucher-item">
                     ${fieldsHtml}
-                    ${this.config.show_mark_as_used && item.id ? `<mark-as-used-button item_id="${escHtml(item.id)}" entity="${escHtml(entityId)}"></mark-as-used-button><br><br>` : '<br>'}
+                    ${this.config.show_mark_as_used && item.id ? `<mark-as-used-button item_id="${escHtml(item.id)}" entity="${escHtml(entityId)}"></mark-as-used-button><br><br>` : ''}
                     ${this.config.show_barcode ? this.generateBarcodeHtml(item.redeem_code, item.code_type) : ''}
                 </div>
             `;
