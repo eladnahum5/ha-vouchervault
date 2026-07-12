@@ -71,6 +71,7 @@
             "expiry_date": "Date d'expiration",
             "description": "Description",
             "is_used": "Est-il utilisé",
+            "is_pinned": "Est-il épinglé",
             "user": "Utilisateur",
             "redeem_code": "Code d'utilisation",
             "code_type": "Type de code",

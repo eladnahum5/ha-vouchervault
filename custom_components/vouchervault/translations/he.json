@@ -71,6 +71,7 @@
             "expiry_date": "תאריך תפוגה",
             "description": "תיאור",
             "is_used": "שומש",
+            "is_pinned": "נעוץ",
             "user": "משתמש",
             "redeem_code": "קוד מימוש",
             "code_type": "סוג קוד",

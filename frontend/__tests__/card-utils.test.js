@@ -38,4 +38,9 @@ describe("vvFieldLabel", () => {
         const hass = { localize: (key) => key };
         expect(vvFieldLabel(hass, "expiry_date")).toBe("Expiry Date");
     });
+
+    it("returns localized label for is_pinned when available", () => {
+        const hass = { localize: () => "נעוץ" };
+        expect(vvFieldLabel(hass, "is_pinned")).toBe("נעוץ");
+    });
 });

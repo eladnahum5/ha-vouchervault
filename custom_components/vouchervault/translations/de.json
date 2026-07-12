@@ -71,6 +71,7 @@
             "expiry_date": "Ablaufdatum",
             "description": "Beschreibung",
             "is_used": "Ist verwendet",
+            "is_pinned": "Ist angeheftet",
             "user": "Benutzer",
             "redeem_code": "Einlösecode",
             "code_type": "Codetyp",

@@ -90,6 +90,11 @@ class VoucherVaultCard extends HTMLElement {
             throw new Error("You need to define an entity");
         }
 
+        // Track whether the user explicitly set `card_title`. When they do, we
+        // use their value as-is and skip the translation lookup, so a
+        // user-configured title is never overridden by a localized string.
+        this._hasUserCardTitle = config.card_title != null;
+
         this.config = {
             ...config,
             barcode_padding: config.barcode_padding ?? 10,
@@ -137,7 +142,11 @@ class VoucherVaultCard extends HTMLElement {
     _updateCardChrome(hass) {
         const haCard = this.querySelector('ha-card');
         if (haCard) {
-            const title = vvTranslateCard(hass, 'title', this.config.card_title);
+            // If the user configured `card_title`, use it directly. Otherwise
+            // fall back to the translated title (or the default).
+            const title = this._hasUserCardTitle
+                ? this.config.card_title
+                : vvTranslateCard(hass, 'title', this.config.card_title);
             haCard.setAttribute('header', title);
         }
         if (this.content) {
