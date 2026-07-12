@@ -119,9 +119,9 @@ Barcodes are blurred by default to prevent accidental exposure. **Tap or click a
 
 The blur resets when the card rebuilds its content (i.e. when the underlying sensor data changes).
 
-### Vouchers without an expiration date
+### Missing fields
 
-`expiry_date` is treated as optional. If a voucher or gift card has no expiration date, the field is simply omitted from its card instead of showing an error — no placeholder date is required.
+Every field in `fields_to_show` is optional per item. If an item has no value for a field (for example a gift card with no `expiry_date`), that field is simply omitted from its card instead of showing an error — no placeholder value is required.
 
 ### Card language
 

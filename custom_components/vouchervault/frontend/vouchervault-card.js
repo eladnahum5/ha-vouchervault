@@ -21,13 +21,6 @@ const buttonStyle = css`
     }
 `;
 
-// Fields that are allowed to be absent on an item without being treated as a
-// card misconfiguration (e.g. a misspelled field in `fields_to_show`). When
-// one of these is missing, the row is silently omitted instead of showing a
-// "Field not found" error. `expiry_date` is optional because not every
-// voucher or gift card has an expiration date.
-const OPTIONAL_ITEM_FIELDS = new Set(["expiry_date"]);
-
 class VoucherRefreshButton extends LitElement {
     static get properties() {
         return {
@@ -215,19 +208,16 @@ class VoucherVaultCard extends HTMLElement {
     }
 
     generateItemHtml(hass, item, entityId) {
-        // Loop through fields_to_show and only include those in the output
+        // Loop through fields_to_show and only include those that have a
+        // value on this item. All fields are optional: not every voucher or
+        // gift card has every field (e.g. no expiry_date), so a missing value
+        // is simply omitted rather than flagged as an error. Whether a field
+        // name is valid at all is VoucherVault's concern, not this card's.
         let fieldsHtml = '';
         for (const field of this.config.fields_to_show) {
             if (item[field]) {
                 const displayField = vvFieldLabel(hass, field);
                 fieldsHtml += `${escHtml(displayField)}: ${escHtml(item[field])}<br>`;
-            } else if (OPTIONAL_ITEM_FIELDS.has(field)) {
-                // Optional fields (e.g. expiry_date) are simply omitted when the
-                // item has no value for them, rather than flagged as an error.
-                continue;
-            } else {
-                const prefix = vvTranslateCard(hass, 'field_not_found', 'Field not found');
-                fieldsHtml += `<span style="color:red;font-size:0.8em">${escHtml(prefix)}: ${escHtml(field)}</span><br>`;
             }
         }
         return `

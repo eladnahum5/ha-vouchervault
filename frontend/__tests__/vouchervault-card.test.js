@@ -155,7 +155,7 @@ describe("VoucherVaultCard", () => {
         expect(card.textContent).not.toMatch(/expiry date/i);
     });
 
-    it("still shows field not found for genuinely misconfigured fields", async () => {
+    it("omits any field silently when the item has no value for it, regardless of the field name", async () => {
         const card = document.createElement("vouchervault-card");
         card.setConfig({
             entity: ENTITY,
@@ -182,8 +182,9 @@ describe("VoucherVaultCard", () => {
         });
         card.hass = hass;
         await Promise.resolve();
-        expect(card.textContent).toMatch(/field not found/i);
-        expect(card.textContent).toContain("totally_made_up_field");
+        expect(card.textContent).toContain("Active");
+        expect(card.textContent).not.toMatch(/field not found/i);
+        expect(card.textContent).not.toContain("totally_made_up_field");
     });
 
     it("hides the barcode canvas when show_barcode is false", async () => {

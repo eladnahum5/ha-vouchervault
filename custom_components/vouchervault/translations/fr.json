@@ -56,7 +56,6 @@
         "loading": "Chargement…",
         "entity_not_found": "Entité introuvable",
         "no_items_yet": "Pas encore de données d'articles.",
-        "field_not_found": "Champ introuvable",
         "refresh_items": "Actualiser les articles",
         "mark_as_used": "Marquer comme utilisé",
         "barcode_error_prefix": "Erreur de code-barres",
