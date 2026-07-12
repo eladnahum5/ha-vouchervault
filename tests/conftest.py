@@ -8,6 +8,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+import pytest_asyncio
 import respx
 from homeassistant.core import HassJob
 from homeassistant.util import dt as dt_util
@@ -36,19 +37,26 @@ from custom_components.vouchervault.vouchervault import ApiData
 _LOGGER = logging.getLogger(__name__)
 
 
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 def verify_cleanup(
-    event_loop: asyncio.AbstractEventLoop,
     expected_lingering_tasks: bool,
     expected_lingering_timers: bool,
 ) -> Generator[None]:
     """Mirror pytest-homeassistant verify_cleanup (see their ``plugins.py``).
+
+    This fixture requires the event loop to be stopped, so it cannot be an
+    async fixture. It is decorated with ``@pytest_asyncio.fixture`` (rather
+    than ``@pytest.fixture``) purely so pytest-asyncio sets up the correct
+    event loop before this fixture runs; ``asyncio.get_event_loop()`` is
+    called directly instead of depending on the removed ``event_loop``
+    fixture, matching upstream's current implementation.
 
     After ``shutdown_default_executor()``, CPython may leave a short-lived daemon
     thread named ``_run_safe_shutdown_loop``. That thread is created by the test
     harness / asyncio, not by this integration, so it is excluded from the
     stricter thread check. Any other unexpected threads still fail the test.
     """
+    event_loop = asyncio.get_event_loop()
     threads_before = frozenset(threading.enumerate())
     tasks_before = asyncio.all_tasks(event_loop)
     yield
