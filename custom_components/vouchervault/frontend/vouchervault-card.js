@@ -5,6 +5,7 @@ import {
 } from "https://unpkg.com/lit-element@2.0.1/lit-element.js?module";
 
 import {
+    VV_DOMAIN,
     escHtml,
     vvTranslateCard,
     vvFieldLabel,
