@@ -71,6 +71,7 @@
             "expiry_date": "Fecha de caducidad",
             "description": "Descripción",
             "is_used": "Está usado",
+            "is_pinned": "Está fijado",
             "user": "Usuario",
             "redeem_code": "Código de canje",
             "code_type": "Tipo de código",

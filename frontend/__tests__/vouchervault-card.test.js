@@ -91,6 +91,39 @@ describe("VoucherVaultCard", () => {
         expect(card.querySelectorAll("mark-as-used-button").length).toBe(1);
     });
 
+    it("uses configured card_title verbatim without a translation lookup", async () => {
+        const card = document.createElement("vouchervault-card");
+        card.setConfig({ entity: ENTITY, card_title: "My Vouchers" });
+        // localize returns a translated title, but it must be ignored because
+        // the user configured card_title explicitly.
+        const localize = vi.fn(() => "Translated Title");
+        const hass = makeHass({
+            localize,
+            states: {
+                [ENTITY]: { state: "0", attributes: {} },
+            },
+        });
+        card.hass = hass;
+        await Promise.resolve();
+        const haCard = card.querySelector("ha-card");
+        expect(haCard.getAttribute("header")).toBe("My Vouchers");
+    });
+
+    it("uses the translated title when card_title is not configured", async () => {
+        const card = document.createElement("vouchervault-card");
+        card.setConfig({ entity: ENTITY });
+        const hass = makeHass({
+            localize: () => "Translated Title",
+            states: {
+                [ENTITY]: { state: "0", attributes: {} },
+            },
+        });
+        card.hass = hass;
+        await Promise.resolve();
+        const haCard = card.querySelector("ha-card");
+        expect(haCard.getAttribute("header")).toBe("Translated Title");
+    });
+
     it("refresh button calls homeassistant.update_entity", async () => {
         const card = document.createElement("vouchervault-card");
         card.setConfig({ entity: ENTITY });
