@@ -11,14 +11,30 @@ import {
     vvFieldLabel,
 } from "/vouchervault/vouchervault-card-utils.js";
 
+// VoucherVault brand accent (indigo/violet). Kept as a single tunable pair
+// so the whole card's accent can be adjusted from one place.
+const VV_ACCENT = "#6366f1";
+const VV_ACCENT_DARK = "#4f46e5";
+
 const buttonStyle = css`
     button {
-        padding: 10px 16px;
+        padding: 10px 18px;
         border-radius: 10px;
         border: none;
-        background: #6b6b6b;
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
         color: white;
+        font-weight: 600;
+        font-size: 0.92em;
+        letter-spacing: 0.01em;
         cursor: pointer;
+        box-shadow: 0 2px 6px rgba(79, 70, 229, 0.35);
+        transition: filter 0.15s ease, transform 0.05s ease;
+    }
+    button:hover {
+        filter: brightness(1.08);
+    }
+    button:active {
+        transform: translateY(1px);
     }
 `;
 
@@ -81,7 +97,16 @@ class VoucherMarkUsedButton extends LitElement {
     }
 
     static get styles() {
-        return buttonStyle;
+        // Slightly muted variant so it doesn't visually compete with refresh.
+        return css`
+            ${buttonStyle}
+            button {
+                background: linear-gradient(135deg, #818cf8, #6366f1);
+                box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
+                padding: 8px 14px;
+                font-size: 0.85em;
+            }
+        `;
     }
 }
 
@@ -108,17 +133,11 @@ class VoucherVaultCard extends HTMLElement {
             sort_order: config.sort_order ?? "asc", // "asc" or "desc"
             barcode_scale: config.barcode_scale ?? 2,
             show_search: config.show_search ?? true,
-            search_placeholder: config.search_placeholder ?? null,
-            search_by: config.search_by ?? "name",
         };
 
         // throw error if sort_by is not in fields_to_show
         if (!this.config.fields_to_show.includes(this.config.sort_by)) {
             throw new Error("sort_by field must be included in fields_to_show (fields_to_show default is [name, issuer, value, expiry_date])");
-        }
-
-        if (!this.config.fields_to_show.includes(this.config.search_by)) {
-            throw new Error("search_by field must be included in fields_to_show (fields_to_show default is [name, issuer, value, expiry_date])");
         }
 
         // throw error if sort_order is not "asc" or "desc"
@@ -225,14 +244,25 @@ class VoucherVaultCard extends HTMLElement {
         for (const field of this.config.fields_to_show) {
             if (item[field]) {
                 const displayField = vvFieldLabel(hass, field);
-                fieldsHtml += `${escHtml(displayField)}: ${escHtml(item[field])}<br>`;
+                // First shown field acts as the item's "title" line for a bit
+                // more visual hierarchy; the rest read as ordinary detail rows.
+                if (field === this.config.fields_to_show[0]) {
+                    fieldsHtml += `<div class="vv-item-title">${escHtml(item[field])}</div>`;
+                } else {
+                    fieldsHtml += `<div class="vv-item-field"><span class="vv-item-label">${escHtml(displayField)}</span>: ${escHtml(item[field])}</div>`;
+                }
             }
         }
+        const pinnedClass = item.is_pinned ? ' vv-pinned' : '';
+        const pinnedBadge = item.is_pinned
+            ? `<span class="vv-pin-badge">${escHtml(vvTranslateCard(hass, 'pinned', 'Pinned'))}</span>`
+            : '';
         return `
-                <div class="voucher-item">
+                <div class="voucher-item${pinnedClass}">
+                    ${pinnedBadge}
                     ${fieldsHtml}
-                    ${this.config.show_mark_as_used && item.id ? `<mark-as-used-button item_id="${escHtml(item.id)}" entity="${escHtml(entityId)}"></mark-as-used-button><br><br>` : ''}
-                    ${this.config.show_barcode ? this.generateBarcodeHtml(item.redeem_code, item.code_type) : ''}
+                    ${this.config.show_mark_as_used && item.id ? `<div class="vv-item-actions"><mark-as-used-button item_id="${escHtml(item.id)}" entity="${escHtml(entityId)}"></mark-as-used-button></div>` : ''}
+                    ${this.config.show_barcode ? `<div class="vv-barcode-wrap">${this.generateBarcodeHtml(item.redeem_code, item.code_type)}</div>` : ''}
                 </div>
             `;
     }
@@ -343,33 +373,27 @@ class VoucherVaultCard extends HTMLElement {
         if (this._lastRenderCacheKey !== renderCacheKey) {
             this._lastRenderCacheKey = renderCacheKey;
 
-            const separatorHtml = `<div class="separator"><br><hr></div>`;
-            const searchPlaceholder = this.config.search_placeholder ?? vvTranslateCard(hass, 'search_placeholder', 'Search vouchers...');
             const searchByOptionsHtml = this.config.fields_to_show
                 .map(field => `<option value="${escHtml(field)}" ${field === this._searchBy ? 'selected' : ''}>${escHtml(vvFieldLabel(hass, field))}</option>`)
                 .join('');
             let vouchersHtml = `
                 ${this.config.show_search ? `
-                <div style="display:flex;gap:8px;margin-bottom:8px;">
+                <div class="vv-search-row">
                     <input
                         type="text"
                         class="vv-search-input"
-                        placeholder="${escHtml(searchPlaceholder)}"
+                        placeholder="${escHtml(vvTranslateCard(hass, 'search_placeholder', 'Search vouchers...'))}"
                         value="${escHtml(this._searchQuery || '')}"
-                        style="flex:1 1 auto;min-width:0;box-sizing:border-box;padding:12px 14px;border-radius:10px;border:1px solid #ccc;font-size:16px;"
                     >
-                    <select
-                        class="vv-search-by-select"
-                        style="flex:0 0 auto;box-sizing:border-box;padding:0 8px;border-radius:10px;border:1px solid #ccc;font-size:14px;background:gray;color:#000;"
-                    >
+                    <select class="vv-search-by-select">
                         ${searchByOptionsHtml}
                     </select>
                 </div>
                 ` : ''}
                 <voucher-refresh-button entity="${escHtml(entityId)}"></voucher-refresh-button>
-                ${separatorHtml}
+                <div class="vv-items-list">
             `;
-            
+
             let itemsToShow = []; // list of dictionaries with keys "item" and "html"
             for (const item of itemDetails) {
                 // check if item type is in filter list (if filter list is not empty)
@@ -383,10 +407,7 @@ class VoucherVaultCard extends HTMLElement {
                 if (this._searchQuery && !(item[this._searchBy] || '').toLowerCase().includes(this._searchQuery.toLowerCase())) {
                     continue;
                 }
-                const itemHtml = `
-                    ${this.generateItemHtml(hass, item, entityId)}
-                    ${separatorHtml}
-                `;
+                const itemHtml = this.generateItemHtml(hass, item, entityId);
                 itemsToShow.push({
                     "item": item,
                     "html": itemHtml
@@ -395,6 +416,7 @@ class VoucherVaultCard extends HTMLElement {
             // add each item's HTML to vouchersHtml, show item.is_pinned = true items first
             itemsToShow = this.sortItems(itemsToShow);
             vouchersHtml += itemsToShow.map(i => i.html).join('');
+            vouchersHtml += `</div>`;
 
             this.content.innerHTML = vouchersHtml;
 
@@ -428,6 +450,110 @@ class VoucherVaultCard extends HTMLElement {
         if (!this.content) {
             this.innerHTML = `
                 <ha-card header="VoucherVault">
+                    <style>
+                        vouchervault-card ha-card {
+                            --vv-accent: ${VV_ACCENT};
+                            --vv-accent-dark: ${VV_ACCENT_DARK};
+                        }
+                        vouchervault-card .card-content {
+                            padding: 16px;
+                        }
+                        vouchervault-card .vv-search-row {
+                            display: flex;
+                            gap: 8px;
+                            margin-bottom: 14px;
+                        }
+                        vouchervault-card .vv-search-input {
+                            flex: 1 1 auto;
+                            min-width: 0;
+                            box-sizing: border-box;
+                            padding: 10px 14px;
+                            border-radius: 10px;
+                            border: 1px solid var(--divider-color, #ddd);
+                            background: var(--card-background-color, #fff);
+                            color: var(--primary-text-color, inherit);
+                            font-size: 15px;
+                            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+                        }
+                        vouchervault-card .vv-search-input:focus {
+                            outline: none;
+                            border-color: var(--vv-accent, #6366f1);
+                            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+                        }
+                        vouchervault-card .vv-search-by-select {
+                            flex: 0 0 auto;
+                            box-sizing: border-box;
+                            padding: 0 10px;
+                            border-radius: 10px;
+                            border: 1px solid var(--divider-color, #ddd);
+                            background: var(--card-background-color, #fff);
+                            color: var(--primary-text-color, inherit);
+                            font-size: 13px;
+                        }
+                        vouchervault-card .vv-items-list {
+                            display: flex;
+                            flex-direction: column;
+                            gap: 12px;
+                            margin-top: 14px;
+                        }
+                        vouchervault-card .voucher-item {
+                            position: relative;
+                            border-radius: 12px;
+                            border: 1px solid var(--divider-color, rgba(0,0,0,0.08));
+                            background: var(--card-background-color, #fff);
+                            padding: 14px 16px 14px 18px;
+                            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+                            transition: box-shadow 0.15s ease, transform 0.1s ease;
+                        }
+                        vouchervault-card .voucher-item:hover {
+                            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+                        }
+                        vouchervault-card .voucher-item::before {
+                            content: "";
+                            position: absolute;
+                            left: 0;
+                            top: 0;
+                            bottom: 0;
+                            width: 4px;
+                            border-radius: 4px 0 0 4px;
+                            background: var(--divider-color, rgba(0,0,0,0.08));
+                        }
+                        vouchervault-card .voucher-item.vv-pinned::before {
+                            background: linear-gradient(180deg, var(--vv-accent, #6366f1), var(--vv-accent-dark, #4f46e5));
+                        }
+                        vouchervault-card .vv-pin-badge {
+                            display: inline-block;
+                            font-size: 0.72em;
+                            font-weight: 600;
+                            letter-spacing: 0.03em;
+                            text-transform: uppercase;
+                            color: white;
+                            background: linear-gradient(135deg, var(--vv-accent, #6366f1), var(--vv-accent-dark, #4f46e5));
+                            padding: 2px 8px;
+                            border-radius: 999px;
+                            margin-bottom: 8px;
+                        }
+                        vouchervault-card .vv-item-title {
+                            font-size: 1.05em;
+                            font-weight: 600;
+                            margin-bottom: 4px;
+                        }
+                        vouchervault-card .vv-item-field {
+                            font-size: 0.92em;
+                            opacity: 0.85;
+                            line-height: 1.5;
+                        }
+                        vouchervault-card .vv-item-label {
+                            font-weight: 500;
+                            opacity: 0.75;
+                        }
+                        vouchervault-card .vv-item-actions {
+                            margin: 10px 0;
+                        }
+                        vouchervault-card .vv-barcode-wrap {
+                            margin-top: 8px;
+                        }
+                    </style>
                     <div class="card-content">
                         <p class="vv-card-loading">Loading...</p>
                     </div>
@@ -435,7 +561,7 @@ class VoucherVaultCard extends HTMLElement {
             `;
             this.content = this.querySelector('.card-content');
             this._searchQuery = '';
-            this._searchBy = this.config.search_by;
+            this._searchBy = '';
 
             // Delegate canvas clicks here once so the listener survives innerHTML
             // replacements. HA's CSP blocks inline onclick attributes.
