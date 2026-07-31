@@ -109,11 +109,16 @@ class VoucherVaultCard extends HTMLElement {
             barcode_scale: config.barcode_scale ?? 2,
             show_search: config.show_search ?? true,
             search_placeholder: config.search_placeholder ?? null,
+            search_by: config.search_by ?? "name",
         };
 
         // throw error if sort_by is not in fields_to_show
         if (!this.config.fields_to_show.includes(this.config.sort_by)) {
             throw new Error("sort_by field must be included in fields_to_show (fields_to_show default is [name, issuer, value, expiry_date])");
+        }
+
+        if (!this.config.fields_to_show.includes(this.config.search_by)) {
+            throw new Error("search_by field must be included in fields_to_show (fields_to_show default is [name, issuer, value, expiry_date])");
         }
 
         // throw error if sort_order is not "asc" or "desc"
@@ -334,21 +339,32 @@ class VoucherVaultCard extends HTMLElement {
         // seconds).
         const itemsJson = JSON.stringify(itemDetails);
         const lang = hass.language || 'en';
-        const renderCacheKey = `${lang}:${this._searchQuery || ''}:${itemsJson}`;
+        const renderCacheKey = `${lang}:${this._searchQuery || ''}:${this._searchBy}:${itemsJson}`;
         if (this._lastRenderCacheKey !== renderCacheKey) {
             this._lastRenderCacheKey = renderCacheKey;
 
             const separatorHtml = `<div class="separator"><br><hr></div>`;
             const searchPlaceholder = this.config.search_placeholder ?? vvTranslateCard(hass, 'search_placeholder', 'Search vouchers...');
+            const searchByOptionsHtml = this.config.fields_to_show
+                .map(field => `<option value="${escHtml(field)}" ${field === this._searchBy ? 'selected' : ''}>${escHtml(vvFieldLabel(hass, field))}</option>`)
+                .join('');
             let vouchersHtml = `
                 ${this.config.show_search ? `
-                <input
-                    type="text"
-                    class="vv-search-input"
-                    placeholder="${escHtml(searchPlaceholder)}"
-                    value="${escHtml(this._searchQuery || '')}"
-                    style="width:100%;box-sizing:border-box;padding:8px 10px;margin-bottom:8px;border-radius:8px;border:1px solid #ccc;font-size:14px;"
-                >
+                <div style="display:flex;gap:8px;margin-bottom:8px;">
+                    <input
+                        type="text"
+                        class="vv-search-input"
+                        placeholder="${escHtml(searchPlaceholder)}"
+                        value="${escHtml(this._searchQuery || '')}"
+                        style="flex:1 1 auto;min-width:0;box-sizing:border-box;padding:12px 14px;border-radius:10px;border:1px solid #ccc;font-size:16px;"
+                    >
+                    <select
+                        class="vv-search-by-select"
+                        style="flex:0 0 auto;box-sizing:border-box;padding:0 8px;border-radius:10px;border:1px solid #ccc;font-size:14px;background:gray;color:#000;"
+                    >
+                        ${searchByOptionsHtml}
+                    </select>
+                </div>
                 ` : ''}
                 <voucher-refresh-button entity="${escHtml(entityId)}"></voucher-refresh-button>
                 ${separatorHtml}
@@ -363,8 +379,8 @@ class VoucherVaultCard extends HTMLElement {
                 if (item.is_used) {
                     continue; // Skip already-used vouchers
                 }
-                // filter by search query against item.name (case-insensitive)
-                if (this._searchQuery && !(item.name || '').toLowerCase().includes(this._searchQuery.toLowerCase())) {
+                // filter by search query against the currently selected search_by field (case-insensitive)
+                if (this._searchQuery && !(item[this._searchBy] || '').toLowerCase().includes(this._searchQuery.toLowerCase())) {
                     continue;
                 }
                 const itemHtml = `
@@ -419,6 +435,7 @@ class VoucherVaultCard extends HTMLElement {
             `;
             this.content = this.querySelector('.card-content');
             this._searchQuery = '';
+            this._searchBy = this.config.search_by;
 
             // Delegate canvas clicks here once so the listener survives innerHTML
             // replacements. HA's CSP blocks inline onclick attributes.
@@ -442,6 +459,14 @@ class VoucherVaultCard extends HTMLElement {
                         newInput.focus();
                         newInput.setSelectionRange(caret, caret);
                     }
+                }
+            });
+
+            // delegated change listener for the "search by" field dropdown.
+            this.content.addEventListener('change', (e) => {
+                if (e.target.matches('.vv-search-by-select')) {
+                    this._searchBy = e.target.value;
+                    this._vvApplyHassContent(this._hass);
                 }
             });
         }
