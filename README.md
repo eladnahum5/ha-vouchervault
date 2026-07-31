@@ -2,9 +2,9 @@
   <img src="custom_components/vouchervault/brand/icon.png" alt="VoucherVault logo" width="180">
 </p>
 
-# VoucherVault for Home Assistant
+# <div align="center">VoucherVault for Home Assistant</div>
 
-A Home Assistant integration for [l4rm4nd/VoucherVault](https://github.com/l4rm4nd/VoucherVault) — track your vouchers, gift cards, and loyalty cards directly in Home Assistant.
+<div align="center">A Home Assistant integration for [l4rm4nd/VoucherVault](https://github.com/l4rm4nd/VoucherVault) — track your vouchers, gift cards, and loyalty cards directly in Home Assistant.</div>
 
 ## Requirements
 
