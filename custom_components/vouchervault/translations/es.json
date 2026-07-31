@@ -59,6 +59,8 @@
         "refresh_items": "Actualizar artículos",
         "mark_as_used": "Marcar como usado",
         "barcode_error_prefix": "Error de código de barras",
+        "pinned": "Fijado",
+        "search_placeholder": "Buscar cupones…",
         "fields": {
             "id": "ID",
             "type": "Tipo",

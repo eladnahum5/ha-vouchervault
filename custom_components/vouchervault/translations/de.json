@@ -59,6 +59,8 @@
         "refresh_items": "Artikel aktualisieren",
         "mark_as_used": "Als verwendet markieren",
         "barcode_error_prefix": "Barcodefehler",
+        "pinned": "Angeheftet",
+        "search_placeholder": "Gutscheine suchen …",
         "fields": {
             "id": "ID",
             "type": "Typ",

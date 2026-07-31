@@ -152,7 +152,10 @@ describe("VoucherVaultCard", () => {
         await Promise.resolve();
         expect(card.textContent).toContain("NoExpiry");
         expect(card.textContent).not.toMatch(/field not found/i);
-        expect(card.textContent).not.toMatch(/expiry date/i);
+        // Scoped to the item body: the search dropdown lists every configured
+        // field, so "Expiry date" legitimately appears elsewhere on the card.
+        const item = card.querySelector(".voucher-item");
+        expect(item.textContent).not.toMatch(/expiry date/i);
     });
 
     it("omits any field silently when the item has no value for it, regardless of the field name", async () => {
@@ -184,7 +187,8 @@ describe("VoucherVaultCard", () => {
         await Promise.resolve();
         expect(card.textContent).toContain("Active");
         expect(card.textContent).not.toMatch(/field not found/i);
-        expect(card.textContent).not.toContain("totally_made_up_field");
+        const item = card.querySelector(".voucher-item");
+        expect(item.textContent).not.toMatch(/totally.made.up.field/i);
     });
 
     it("hides the barcode canvas when show_barcode is false", async () => {
@@ -501,6 +505,527 @@ describe("VoucherVaultCard sorting and filtering", () => {
         expect(card.textContent).toContain("Alpha");
         expect(card.textContent).toContain("Beta");
         expect(card.textContent).toContain("Charlie");
+    });
+});
+
+describe("VoucherVaultCard search bar", () => {
+    beforeEach(() => {
+        window.bwipjs = { toCanvas: vi.fn() };
+    });
+
+    afterEach(() => {
+        delete window.bwipjs;
+        vi.restoreAllMocks();
+    });
+
+    function searchItems() {
+        return [
+            {
+                id: "a",
+                name: "Alpha",
+                issuer: "AcmeCo",
+                value: "20",
+                expiry_date: "2099-01-01",
+                redeem_code: "A",
+                code_type: "qrcode",
+                is_used: false,
+            },
+            {
+                id: "b",
+                name: "Beta",
+                issuer: "Globex",
+                value: "10",
+                expiry_date: "2099-03-01",
+                redeem_code: "B",
+                code_type: "qrcode",
+                is_used: false,
+            },
+            {
+                id: "c",
+                name: "Alphabet Soup",
+                issuer: "Globex",
+                value: "30",
+                expiry_date: "2099-02-01",
+                redeem_code: "C",
+                code_type: "qrcode",
+                is_used: false,
+            },
+        ];
+    }
+
+    function makeCard(config = {}, items = searchItems(), hassOverrides = {}) {
+        const card = document.createElement("vouchervault-card");
+        card.setConfig({ entity: ENTITY, ...config });
+        const hass = makeHass({
+            states: {
+                [ENTITY]: { state: String(items.length), attributes: { items } },
+            },
+            ...hassOverrides,
+        });
+        card.hass = hass;
+        return { card, hass };
+    }
+
+    // Item titles are the first configured field, so they identify which
+    // vouchers survived filtering without picking up search dropdown text.
+    function shownNames(card) {
+        return [...card.querySelectorAll(".voucher-item .vv-item-title")].map(
+            (el) => el.textContent.trim(),
+        );
+    }
+
+    async function typeQuery(card, query) {
+        const input = card.querySelector(".vv-search-input");
+        input.value = query;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        await Promise.resolve();
+    }
+
+    async function chooseSearchBy(card, field) {
+        const select = card.querySelector(".vv-search-by-select");
+        select.value = field;
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+        await Promise.resolve();
+    }
+
+    it("renders the search input and field dropdown by default", async () => {
+        const { card } = makeCard();
+        await Promise.resolve();
+        expect(card.querySelector(".vv-search-row")).toBeTruthy();
+        expect(card.querySelector(".vv-search-input")).toBeTruthy();
+        expect(card.querySelector(".vv-search-by-select")).toBeTruthy();
+    });
+
+    it("hides the search row when show_search is false but still lists items", async () => {
+        const { card } = makeCard({ show_search: false });
+        await Promise.resolve();
+        expect(card.querySelector(".vv-search-row")).toBeNull();
+        expect(card.querySelector(".vv-search-input")).toBeNull();
+        expect(shownNames(card)).toHaveLength(3);
+    });
+
+    it("offers one dropdown option per configured field, labeled for display", async () => {
+        const { card } = makeCard();
+        await Promise.resolve();
+        const options = [...card.querySelectorAll(".vv-search-by-select option")];
+        expect(options.map((o) => o.value)).toEqual([
+            "name",
+            "issuer",
+            "value",
+            "expiry_date",
+        ]);
+        expect(options.map((o) => o.textContent.trim())).toEqual([
+            "Name",
+            "Issuer",
+            "Value",
+            "Expiry Date",
+        ]);
+    });
+
+    it("defaults to searching the field the dropdown shows as selected", async () => {
+        const { card } = makeCard();
+        await Promise.resolve();
+        const select = card.querySelector(".vv-search-by-select");
+        // A mismatch here would filter against a nonexistent field and hide
+        // every voucher as soon as the user typed anything.
+        expect(card._searchBy).toBe(select.value);
+        expect(card._searchBy).toBe("name");
+    });
+
+    it("shows every item before a query is entered", async () => {
+        const { card } = makeCard();
+        await Promise.resolve();
+        expect(shownNames(card)).toEqual(["Alpha", "Alphabet Soup", "Beta"]);
+    });
+
+    it("filters items by the search query", async () => {
+        const { card } = makeCard();
+        await Promise.resolve();
+        await typeQuery(card, "Beta");
+        expect(shownNames(card)).toEqual(["Beta"]);
+    });
+
+    it("matches case-insensitively", async () => {
+        const { card } = makeCard();
+        await Promise.resolve();
+        await typeQuery(card, "aLpHa");
+        expect(shownNames(card)).toEqual(["Alpha", "Alphabet Soup"]);
+    });
+
+    it("matches on substrings, not just prefixes", async () => {
+        const { card } = makeCard();
+        await Promise.resolve();
+        await typeQuery(card, "phabet");
+        expect(shownNames(card)).toEqual(["Alphabet Soup"]);
+    });
+
+    it("renders no items but keeps the search box when nothing matches", async () => {
+        const { card } = makeCard();
+        await Promise.resolve();
+        await typeQuery(card, "nothing matches this");
+        expect(shownNames(card)).toEqual([]);
+        expect(card.querySelectorAll(".voucher-item")).toHaveLength(0);
+        // The input must survive an empty result set, otherwise the user has no
+        // way to clear the query and get their vouchers back.
+        const input = card.querySelector(".vv-search-input");
+        expect(input).toBeTruthy();
+        expect(input.value).toBe("nothing matches this");
+    });
+
+    it("restores all items when the query is cleared", async () => {
+        const { card } = makeCard();
+        await Promise.resolve();
+        await typeQuery(card, "Beta");
+        expect(shownNames(card)).toEqual(["Beta"]);
+        await typeQuery(card, "");
+        expect(shownNames(card)).toEqual(["Alpha", "Alphabet Soup", "Beta"]);
+    });
+
+    it("searches the field chosen in the dropdown", async () => {
+        const { card } = makeCard();
+        await Promise.resolve();
+        await chooseSearchBy(card, "issuer");
+        await typeQuery(card, "globex");
+        expect(shownNames(card)).toEqual(["Alphabet Soup", "Beta"]);
+    });
+
+    it("keeps the chosen search field selected after re-rendering", async () => {
+        const { card } = makeCard();
+        await Promise.resolve();
+        await chooseSearchBy(card, "issuer");
+        await typeQuery(card, "acme");
+        const select = card.querySelector(".vv-search-by-select");
+        expect(select.value).toBe("issuer");
+        expect(card._searchBy).toBe("issuer");
+        expect(shownNames(card)).toEqual(["Alpha"]);
+    });
+
+    it("re-filters against the new field when the dropdown changes", async () => {
+        const { card } = makeCard();
+        await Promise.resolve();
+        await typeQuery(card, "globex");
+        // "globex" is an issuer, so nothing matches while searching by name.
+        expect(shownNames(card)).toEqual([]);
+        await chooseSearchBy(card, "issuer");
+        expect(shownNames(card)).toEqual(["Alphabet Soup", "Beta"]);
+    });
+
+    it("treats items missing the searched field as non-matches", async () => {
+        const { card } = makeCard({}, [
+            {
+                id: "a",
+                name: "Alpha",
+                issuer: "AcmeCo",
+                expiry_date: "2099-01-01",
+                redeem_code: "A",
+                code_type: "qrcode",
+                is_used: false,
+            },
+            {
+                id: "b",
+                name: "Beta",
+                // issuer intentionally omitted
+                expiry_date: "2099-03-01",
+                redeem_code: "B",
+                code_type: "qrcode",
+                is_used: false,
+            },
+        ]);
+        await Promise.resolve();
+        await chooseSearchBy(card, "issuer");
+        await typeQuery(card, "acme");
+        expect(shownNames(card)).toEqual(["Alpha"]);
+    });
+
+    it("does not resurrect used vouchers that match the query", async () => {
+        const { card } = makeCard({}, [
+            {
+                id: "used",
+                name: "Alpha Used",
+                issuer: "AcmeCo",
+                expiry_date: "2099-01-01",
+                redeem_code: "U",
+                code_type: "qrcode",
+                is_used: true,
+            },
+            {
+                id: "a",
+                name: "Alpha Active",
+                issuer: "AcmeCo",
+                expiry_date: "2099-02-01",
+                redeem_code: "A",
+                code_type: "qrcode",
+                is_used: false,
+            },
+        ]);
+        await Promise.resolve();
+        await typeQuery(card, "alpha");
+        expect(shownNames(card)).toEqual(["Alpha Active"]);
+    });
+
+    it("applies the search on top of the show_types filter", async () => {
+        const { card } = makeCard({ show_types: ["gift_card"] }, [
+            {
+                id: "a",
+                name: "Alpha",
+                issuer: "AcmeCo",
+                expiry_date: "2099-01-01",
+                redeem_code: "A",
+                code_type: "qrcode",
+                is_used: false,
+                type: "gift_card",
+            },
+            {
+                id: "b",
+                name: "Alpha Voucher",
+                issuer: "AcmeCo",
+                expiry_date: "2099-02-01",
+                redeem_code: "B",
+                code_type: "qrcode",
+                is_used: false,
+                type: "voucher",
+            },
+        ]);
+        await Promise.resolve();
+        await typeQuery(card, "alpha");
+        expect(shownNames(card)).toEqual(["Alpha"]);
+    });
+
+    it("keeps pinned matches first within the search results", async () => {
+        const { card } = makeCard({}, [
+            {
+                id: "a",
+                name: "Alpha One",
+                issuer: "AcmeCo",
+                expiry_date: "2099-01-01",
+                redeem_code: "A",
+                code_type: "qrcode",
+                is_used: false,
+            },
+            {
+                id: "b",
+                name: "Alpha Two",
+                issuer: "AcmeCo",
+                expiry_date: "2099-03-01",
+                redeem_code: "B",
+                code_type: "qrcode",
+                is_used: false,
+                is_pinned: true,
+            },
+        ]);
+        await Promise.resolve();
+        await typeQuery(card, "alpha");
+        expect(shownNames(card)).toEqual(["Alpha Two", "Alpha One"]);
+    });
+
+    it("keeps focus and caret position in the input while typing", async () => {
+        // focus() only takes effect for elements attached to the document.
+        const { card } = makeCard();
+        document.body.appendChild(card);
+        try {
+            // Let the initial translation load settle first: it re-renders the
+            // card once resolved, which would replace the input for reasons
+            // unrelated to typing.
+            await new Promise((resolve) => setTimeout(resolve, 0));
+            const input = card.querySelector(".vv-search-input");
+            input.focus();
+            input.value = "alph";
+            input.setSelectionRange(2, 2);
+            // The restore is synchronous, so assert without yielding.
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+            const rerendered = card.querySelector(".vv-search-input");
+            expect(rerendered).not.toBe(input);
+            expect(document.activeElement).toBe(rerendered);
+            expect(rerendered.selectionStart).toBe(2);
+        } finally {
+            card.remove();
+        }
+    });
+
+    it("matches queries containing HTML-escaped characters", async () => {
+        const { card } = makeCard({}, [
+            {
+                id: "a",
+                name: "Ben & Jerry's",
+                issuer: "AcmeCo",
+                expiry_date: "2099-01-01",
+                redeem_code: "A",
+                code_type: "qrcode",
+                is_used: false,
+            },
+            {
+                id: "b",
+                name: "Beta",
+                issuer: "AcmeCo",
+                expiry_date: "2099-03-01",
+                redeem_code: "B",
+                code_type: "qrcode",
+                is_used: false,
+            },
+        ]);
+        await Promise.resolve();
+        await typeQuery(card, "ben &");
+        expect(shownNames(card)).toEqual(["Ben & Jerry's"]);
+    });
+
+    it("escapes a quote-bearing query instead of breaking the input markup", async () => {
+        const { card } = makeCard();
+        await Promise.resolve();
+        await typeQuery(card, '"><script>bad()</script>');
+        const input = card.querySelector(".vv-search-input");
+        expect(input).toBeTruthy();
+        expect(input.value).toBe('"><script>bad()</script>');
+        expect(card.querySelector("script")).toBeNull();
+    });
+
+    it("uses the translated placeholder when one is available", async () => {
+        const { card } = makeCard(
+            {},
+            searchItems(),
+            {
+                localize: (key) =>
+                    key.endsWith("search_placeholder") ? "Gutscheine suchen..." : key,
+            },
+        );
+        await Promise.resolve();
+        expect(
+            card.querySelector(".vv-search-input").getAttribute("placeholder"),
+        ).toBe("Gutscheine suchen...");
+    });
+
+    it("falls back to the English placeholder when untranslated", async () => {
+        const { card } = makeCard();
+        await Promise.resolve();
+        expect(
+            card.querySelector(".vv-search-input").getAttribute("placeholder"),
+        ).toBe("Search vouchers...");
+    });
+});
+
+describe("VoucherVaultCard pinned item indicator", () => {
+    beforeEach(() => {
+        window.bwipjs = { toCanvas: vi.fn() };
+    });
+
+    afterEach(() => {
+        delete window.bwipjs;
+        vi.restoreAllMocks();
+    });
+
+    function renderItem(item, hassOverrides = {}) {
+        const card = document.createElement("vouchervault-card");
+        card.setConfig({ entity: ENTITY });
+        const hass = makeHass({
+            states: { [ENTITY]: { state: "1", attributes: { items: [item] } } },
+            ...hassOverrides,
+        });
+        card.hass = hass;
+        return card;
+    }
+
+    function baseItem(overrides = {}) {
+        return {
+            id: "a",
+            name: "Alpha",
+            issuer: "AcmeCo",
+            value: "20",
+            expiry_date: "2099-01-01",
+            redeem_code: "A",
+            code_type: "qrcode",
+            is_used: false,
+            ...overrides,
+        };
+    }
+
+    it("marks a pinned item with the pinned class and badge", async () => {
+        const card = renderItem(baseItem({ is_pinned: true }));
+        await Promise.resolve();
+        const item = card.querySelector(".voucher-item");
+        expect(item.classList.contains("vv-pinned")).toBe(true);
+        const badge = item.querySelector(".vv-pin-badge");
+        expect(badge).toBeTruthy();
+        expect(badge.textContent.trim()).toBe("Pinned");
+    });
+
+    it("omits the pinned class and badge for an unpinned item", async () => {
+        const card = renderItem(baseItem({ is_pinned: false }));
+        await Promise.resolve();
+        const item = card.querySelector(".voucher-item");
+        expect(item.classList.contains("vv-pinned")).toBe(false);
+        expect(item.querySelector(".vv-pin-badge")).toBeNull();
+    });
+
+    it("treats an item without is_pinned as unpinned", async () => {
+        const card = renderItem(baseItem());
+        await Promise.resolve();
+        const item = card.querySelector(".voucher-item");
+        expect(item.classList.contains("vv-pinned")).toBe(false);
+        expect(item.querySelector(".vv-pin-badge")).toBeNull();
+    });
+
+    it("renders the badge before the item's title", async () => {
+        const card = renderItem(baseItem({ is_pinned: true }));
+        await Promise.resolve();
+        const item = card.querySelector(".voucher-item");
+        const badge = item.querySelector(".vv-pin-badge");
+        const title = item.querySelector(".vv-item-title");
+        expect(
+            badge.compareDocumentPosition(title) &
+                Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+    });
+
+    it("uses the translated pinned label when one is available", async () => {
+        const card = renderItem(baseItem({ is_pinned: true }), {
+            localize: (key) => (key.endsWith("pinned") ? "Angepinnt" : key),
+        });
+        await Promise.resolve();
+        expect(
+            card.querySelector(".vv-pin-badge").textContent.trim(),
+        ).toBe("Angepinnt");
+    });
+
+    it("reflects a pin state change on the next hass update", async () => {
+        const card = document.createElement("vouchervault-card");
+        card.setConfig({ entity: ENTITY });
+        const unpinned = baseItem();
+        const hass = makeHass({
+            states: { [ENTITY]: { state: "1", attributes: { items: [unpinned] } } },
+        });
+        card.hass = hass;
+        await Promise.resolve();
+        expect(card.querySelector(".vv-pin-badge")).toBeNull();
+
+        const pinnedHass = makeHass({
+            states: {
+                [ENTITY]: {
+                    state: "1",
+                    attributes: { items: [baseItem({ is_pinned: true })] },
+                },
+            },
+        });
+        card.hass = pinnedHass;
+        await Promise.resolve();
+        const item = card.querySelector(".voucher-item");
+        expect(item.classList.contains("vv-pinned")).toBe(true);
+        expect(item.querySelector(".vv-pin-badge")).toBeTruthy();
+    });
+
+    it("renders the first configured field as the item title and the rest as labeled rows", async () => {
+        const card = renderItem(baseItem());
+        await Promise.resolve();
+        const item = card.querySelector(".voucher-item");
+        expect(item.querySelector(".vv-item-title").textContent.trim()).toBe(
+            "Alpha",
+        );
+        const rows = [...item.querySelectorAll(".vv-item-field")].map((el) =>
+            el.textContent.replace(/\s+/g, " ").trim(),
+        );
+        expect(rows).toEqual([
+            "Issuer: AcmeCo",
+            "Value: 20",
+            "Expiry Date: 2099-01-01",
+        ]);
     });
 });
 

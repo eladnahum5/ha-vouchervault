@@ -59,6 +59,8 @@
         "refresh_items": "רענון פריטים",
         "mark_as_used": "סמן כמשומש",
         "barcode_error_prefix": "שגיאת ברקוד",
+        "pinned": "נעוץ",
+        "search_placeholder": "חיפוש שוברים…",
         "fields": {
             "id": "מזהה",
             "type": "סוג",
