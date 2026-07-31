@@ -72,6 +72,8 @@ In entity IDs, dots in the host are replaced by underscores. For example, host `
 
 <img src="images/home_assistant_companion_app_screenshot.jfif" alt="VoucherVault card in the Home Assistant companion app" width="300">
 
+*The screenshot above predates the current card styling: the search box and the pinned-item badge are not pictured yet.*
+
 This integration ships with a companion Lovelace card. When Lovelace is in **storage mode** (the default), the card resource is registered automatically when the integration is set up — no manual steps required.
 
 When Lovelace is in **YAML mode**, automatic registration is skipped. Add the resource manually to your `configuration.yaml`:
@@ -98,6 +100,7 @@ barcode_scale: 2
 card_title: My Vouchers
 show_mark_as_used: true
 show_barcode: true
+show_search: true
 fields_to_show:
   - name
   - issuer
@@ -115,13 +118,30 @@ sort_order: asc
 | `entity` | Yes | — | The `item_details` sensor entity ID |
 | `barcodePadding` | No | `20` | Padding (in pixels) around rendered barcodes |
 | `barcode_scale` | No | `2` | Scale factor passed to the barcode renderer. Higher values produce larger barcodes. Must be a positive number. Square code types (`qrcode`, `datamatrix`, `azteccode`) are capped at 50% of the card width; all other types at 100%. |
-| `fields_to_show` | No | `["name", "issuer", "value", "expiry_date"]` | List of item fields to display on each voucher card |
+| `fields_to_show` | No | `["name", "issuer", "value", "expiry_date"]` | List of item fields to display on each voucher card. The first field is shown as the voucher's title; the remaining fields appear beneath it as labeled detail rows. |
 | `card_title` | No | `VoucherVault` | Header title shown at the top of the card. Note: if a Home Assistant translation exists for the card title in your language, it takes precedence over this value. |
 | `show_mark_as_used` | No | `true` | Whether to render the **Mark as used** button under each voucher. Set to `false` to hide it. |
 | `show_barcode` | No | `true` | Whether to render the barcode for each voucher. Set to `false` to hide it, for example on dashboards where you only need a quick status overview. |
+| `show_search` | No | `true` | Whether to render the search box and its field dropdown at the top of the card. Set to `false` to hide them. See [Search](#search). |
 | `show_types` | No | `[]` (all types) | List of item types to display. When empty, all types are shown; otherwise only items whose `type` matches an entry in the list are rendered. |
 | `sort_by` | No | `expiry_date` | Field used to sort vouchers. Must be one of the fields listed in `fields_to_show`. Requires VoucherVault ≥ v1.27.10. |
 | `sort_order` | No | `asc` | Sort direction: `asc` (ascending) or `desc` (descending). Pinned items are always shown first regardless of sort order. |
+
+### Search
+
+A search box sits at the top of the card, with a dropdown next to it for choosing which field to search. The list narrows as you type. Matching is case-insensitive and matches anywhere in the value, so `acme` finds `AcmeCo`.
+
+The dropdown lists exactly the fields from `fields_to_show` and starts on the first of them (`name` by default). Items that have no value for the field you are searching never match.
+
+Searching narrows down what is already on the card: vouchers hidden by `show_types` and vouchers already marked as used stay hidden whatever you type, and pinned items still come first among the results. When nothing matches, the card shows an empty list with the search box still in place, so you can clear it to bring your vouchers back.
+
+Set `show_search: false` to hide the search row, for example on a compact dashboard with only a handful of vouchers.
+
+### Pinned items
+
+Vouchers you pin in VoucherVault are always listed first, whatever `sort_by` and `sort_order` are set to. They are also marked visually: a pinned voucher shows a **Pinned** badge above its title and a colored accent stripe along its left edge, so it stands out at a glance in a long list.
+
+Pinning is managed in VoucherVault itself. The card reflects the current state each time the sensor updates.
 
 ### Barcode blur
 
