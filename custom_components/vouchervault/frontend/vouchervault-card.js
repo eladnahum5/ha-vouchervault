@@ -561,7 +561,10 @@ class VoucherVaultCard extends HTMLElement {
             `;
             this.content = this.querySelector('.card-content');
             this._searchQuery = '';
-            this._searchBy = '';
+            // Must match the option the select renders as selected (the first
+            // one), otherwise searching before touching the dropdown would
+            // filter against a nonexistent field and hide every item.
+            this._searchBy = this.config.fields_to_show[0];
 
             // Delegate canvas clicks here once so the listener survives innerHTML
             // replacements. HA's CSP blocks inline onclick attributes.
