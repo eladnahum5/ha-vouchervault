@@ -107,6 +107,8 @@ class VoucherVaultCard extends HTMLElement {
             sort_by: config.sort_by ?? "expiry_date",
             sort_order: config.sort_order ?? "asc", // "asc" or "desc"
             barcode_scale: config.barcode_scale ?? 2,
+            show_search: config.show_search ?? true,
+            search_placeholder: config.search_placeholder ?? null,
         };
 
         // throw error if sort_by is not in fields_to_show
@@ -332,15 +334,26 @@ class VoucherVaultCard extends HTMLElement {
         // seconds).
         const itemsJson = JSON.stringify(itemDetails);
         const lang = hass.language || 'en';
-        const renderCacheKey = `${lang}:${itemsJson}`;
+        const renderCacheKey = `${lang}:${this._searchQuery || ''}:${itemsJson}`;
         if (this._lastRenderCacheKey !== renderCacheKey) {
             this._lastRenderCacheKey = renderCacheKey;
 
             const separatorHtml = `<div class="separator"><br><hr></div>`;
+            const searchPlaceholder = this.config.search_placeholder ?? vvTranslateCard(hass, 'search_placeholder', 'Search vouchers...');
             let vouchersHtml = `
+                ${this.config.show_search ? `
+                <input
+                    type="text"
+                    class="vv-search-input"
+                    placeholder="${escHtml(searchPlaceholder)}"
+                    value="${escHtml(this._searchQuery || '')}"
+                    style="width:100%;box-sizing:border-box;padding:8px 10px;margin-bottom:8px;border-radius:8px;border:1px solid #ccc;font-size:14px;"
+                >
+                ` : ''}
                 <voucher-refresh-button entity="${escHtml(entityId)}"></voucher-refresh-button>
                 ${separatorHtml}
             `;
+            
             let itemsToShow = []; // list of dictionaries with keys "item" and "html"
             for (const item of itemDetails) {
                 // check if item type is in filter list (if filter list is not empty)
@@ -349,6 +362,10 @@ class VoucherVaultCard extends HTMLElement {
                 }
                 if (item.is_used) {
                     continue; // Skip already-used vouchers
+                }
+                // filter by search query against item.name (case-insensitive)
+                if (this._searchQuery && !(item.name || '').toLowerCase().includes(this._searchQuery.toLowerCase())) {
+                    continue;
                 }
                 const itemHtml = `
                     ${this.generateItemHtml(hass, item, entityId)}
@@ -401,6 +418,7 @@ class VoucherVaultCard extends HTMLElement {
                 </ha-card>
             `;
             this.content = this.querySelector('.card-content');
+            this._searchQuery = '';
 
             // Delegate canvas clicks here once so the listener survives innerHTML
             // replacements. HA's CSP blocks inline onclick attributes.
@@ -408,6 +426,22 @@ class VoucherVaultCard extends HTMLElement {
                 if (e.target.matches('canvas[data-bwip]')) {
                     const c = e.target;
                     c.style.filter = c.style.filter === 'blur(5px)' ? 'none' : 'blur(5px)';
+                }
+            });
+
+            // delegated input listener for the search box.
+            // Re-renders on every keystroke, then restores focus/caret since
+            // innerHTML replacement would otherwise blur the field.
+            this.content.addEventListener('input', (e) => {
+                if (e.target.matches('.vv-search-input')) {
+                    this._searchQuery = e.target.value;
+                    const caret = e.target.selectionStart;
+                    this._vvApplyHassContent(this._hass);
+                    const newInput = this.content.querySelector('.vv-search-input');
+                    if (newInput) {
+                        newInput.focus();
+                        newInput.setSelectionRange(caret, caret);
+                    }
                 }
             });
         }
