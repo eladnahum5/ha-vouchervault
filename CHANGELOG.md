@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.2.0](https://github.com/eladnahum5/ha-vouchervault/compare/v2.1.0...v2.2.0) (2026-07-31)
+
+
+### Features
+
+* add search functionality to voucher list with customizable placeholder ([171d4ab](https://github.com/eladnahum5/ha-vouchervault/commit/171d4abf0aa8a6d5bb4bbbbb657dec3180c60756))
+* enhance search functionality with customizable search field ([08975e6](https://github.com/eladnahum5/ha-vouchervault/commit/08975e630a30e1e58b1282d05b4a02997c4b9902))
+* improve voucher card styling and search functionality ([1d262eb](https://github.com/eladnahum5/ha-vouchervault/commit/1d262eb0114a0b80d0e595ad2900956c25c2a1d9))
+* localize card search placeholder and pinned badge ([7a26a56](https://github.com/eladnahum5/ha-vouchervault/commit/7a26a56c6db30f84cf53258433f5259d460a378e))
+
+
+### Bug Fixes
+
+* default card search to the first displayed field ([dece6e5](https://github.com/eladnahum5/ha-vouchervault/commit/dece6e583cec0b31d395ab490813439f757c89a5))
+* ensure release workflow triggers on push to main branch ([ce3714c](https://github.com/eladnahum5/ha-vouchervault/commit/ce3714c3ede142695d5fbbd41119866fd93b425d))
+* pin backend test dependencies for reproducible CI runs ([e662d6f](https://github.com/eladnahum5/ha-vouchervault/commit/e662d6f1398780f42adb007a65d091d32a7028ed)), closes [#40](https://github.com/eladnahum5/ha-vouchervault/issues/40)
+* pin socket-enable hook order for enable_socket-marked tests ([f333f43](https://github.com/eladnahum5/ha-vouchervault/commit/f333f43a76d09b47c18ab25748ca3f71e53330d7))
+* repair broken backend test fixtures for current HA/pytest-asyncio ([64b7aff](https://github.com/eladnahum5/ha-vouchervault/commit/64b7aff37031ea6d731d97030a5dcd7e41bd874e)), closes [#40](https://github.com/eladnahum5/ha-vouchervault/issues/40)
+
 ## [2.1.0](https://github.com/eladnahum5/ha-vouchervault/compare/v2.0.0...v2.1.0) (2026-07-12)
 
 
