@@ -59,6 +59,8 @@
         "refresh_items": "Actualiser les articles",
         "mark_as_used": "Marquer comme utilisé",
         "barcode_error_prefix": "Erreur de code-barres",
+        "pinned": "Épinglé",
+        "search_placeholder": "Rechercher des bons…",
         "fields": {
             "id": "ID",
             "type": "Type",

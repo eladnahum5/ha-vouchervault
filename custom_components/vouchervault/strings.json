@@ -59,6 +59,8 @@
     "refresh_items": "Refresh items",
     "mark_as_used": "Mark as used",
     "barcode_error_prefix": "Barcode error",
+    "pinned": "Pinned",
+    "search_placeholder": "Search vouchers...",
     "fields": {
       "id": "ID",
       "type": "Type",
