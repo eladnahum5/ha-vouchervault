@@ -4,7 +4,7 @@
 
 # <div align="center">VoucherVault for Home Assistant</div>
 
-<div align="center">A Home Assistant integration for [l4rm4nd/VoucherVault](https://github.com/l4rm4nd/VoucherVault) — track your vouchers, gift cards, and loyalty cards directly in Home Assistant.</div>
+<div align="center">A Home Assistant integration for <a href="https://github.com/l4rm4nd/VoucherVault">l4rm4nd/VoucherVault</a> - track your vouchers, gift cards, and loyalty cards directly in Home Assistant.</div>
 
 ## Requirements
 
@@ -72,9 +72,9 @@ In entity IDs, dots in the host are replaced by underscores. For example, host `
 
 <img src="images/home_assistant_companion_app_screenshot.jfif" alt="VoucherVault card in the Home Assistant companion app" width="300">
 
-*The screenshot above predates the current card styling: the search box and the pinned-item badge are not pictured yet.*
 
-This integration ships with a companion Lovelace card. When Lovelace is in **storage mode** (the default), the card resource is registered automatically when the integration is set up — no manual steps required.
+
+This integration ships with a companion Lovelace card. When Lovelace is in **storage mode** (the default), the card resource is registered automatically when the integration is set up - no manual steps required.
 
 When Lovelace is in **YAML mode**, automatic registration is skipped. Add the resource manually to your `configuration.yaml`:
 
@@ -115,7 +115,7 @@ sort_order: asc
 
 | Parameter | Required | Default | Description |
 |-----------|----------|---------|-------------|
-| `entity` | Yes | — | The `item_details` sensor entity ID |
+| `entity` | Yes | - | The `item_details` sensor entity ID |
 | `barcodePadding` | No | `20` | Padding (in pixels) around rendered barcodes |
 | `barcode_scale` | No | `2` | Scale factor passed to the barcode renderer. Higher values produce larger barcodes. Must be a positive number. Square code types (`qrcode`, `datamatrix`, `azteccode`) are capped at 50% of the card width; all other types at 100%. |
 | `fields_to_show` | No | `["name", "issuer", "value", "expiry_date"]` | List of item fields to display on each voucher card. The first field is shown as the voucher's title; the remaining fields appear beneath it as labeled detail rows. |
@@ -151,7 +151,7 @@ The blur resets when the card rebuilds its content (i.e. when the underlying sen
 
 ### Missing fields
 
-Every field in `fields_to_show` is optional per item. If an item has no value for a field (for example a gift card with no `expiry_date`), that field is simply omitted from its card instead of showing an error — no placeholder value is required.
+Every field in `fields_to_show` is optional per item. If an item has no value for a field (for example a gift card with no `expiry_date`), that field is simply omitted from its card instead of showing an error - no placeholder value is required.
 
 ### Card language
 
